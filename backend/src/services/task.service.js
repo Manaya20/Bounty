@@ -1,9 +1,9 @@
-const supabase = require('../config/supabase');
+const SupabaseConfig = require('../config/SupabaseClient');
 const MatchingService = require('./matching.service');
 
 class TaskService {
   constructor() {
-    this.supabase = supabase.getInstance();
+    this.supabase = SupabaseConfig.client; // ✅ Directly access `client`
   }
 
   async createTask(taskData, clientId) {
@@ -27,16 +27,16 @@ class TaskService {
   }
 
   async getTasks(filters = {}) {
-    const query = this.supabase
+    let query = this.supabase
       .from('tasks')
       .select('*');
 
     if (filters.status) {
-      query.eq('status', filters.status);
+      query = query.eq('status', filters.status);
     }
 
     if (filters.skills) {
-      query.contains('required_skills', filters.skills);
+      query = query.contains('required_skills', filters.skills);
     }
 
     const { data, error } = await query;
@@ -47,7 +47,7 @@ class TaskService {
 
   async notifyMatchedTaskers(task, taskers) {
     // Implement notification logic (email, push notification)
-    // Could use a service like SendGrid or internal notification system
+    console.log(`Notify taskers: ${taskers.map(t => t.id)} for task ${task.id}`);
   }
 }
 

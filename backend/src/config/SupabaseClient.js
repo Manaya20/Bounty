@@ -3,6 +3,10 @@ const { SUPABASE_URL, SUPABASE_SERVICE_KEY } = require('./environment');
 
 class SupabaseConfig {
   constructor() {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+      throw new Error("Missing Supabase URL or Service Key.");
+    }
+
     this.client = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
       auth: {
         persistSession: false
@@ -30,4 +34,5 @@ class SupabaseConfig {
   }
 }
 
-module.exports = new SupabaseConfig();
+// ✅ Export the class itself, not an instance
+module.exports = SupabaseConfig;

@@ -5,8 +5,8 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
 // Route imports
-const taskRoutes = require('./routes/task.routes.js');
-const userRoutes = require('./routes/user.routes.js');
+const taskRoutes = require("./src/routes/task.routes");
+const userRoutes = require('./src/routes/user.routes.js');
 
 const app = express();
 

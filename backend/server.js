@@ -1,6 +1,6 @@
 const app = require('./app');
 const { PORT, NODE_ENV } = require('./config/environment');
-const supabase = require('./config/supabase');
+const supabase = require('./config/SupabaseClient');
 
 async function startServer() {
   try {
