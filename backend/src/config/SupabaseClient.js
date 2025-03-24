@@ -9,7 +9,9 @@ class SupabaseConfig {
 
     this.client = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
       auth: {
-        persistSession: false
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
       }
     });
   }
@@ -22,17 +24,17 @@ class SupabaseConfig {
     try {
       const { data, error } = await this.client
         .from('users')
-        .select('id')
+        .select('*')
         .limit(1);
 
       if (error) throw error;
-      return true;
+      return !!data;
     } catch (error) {
-      console.error('Supabase Connection Error:', error);
+      console.error('Supabase Connection Error:', error.message);
       return false;
     }
   }
 }
 
-// ✅ Export the class itself, not an instance
-module.exports = SupabaseConfig;
+// Export a single instance
+module.exports = new SupabaseConfig();

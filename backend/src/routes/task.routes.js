@@ -3,22 +3,23 @@ const router = express.Router();
 const TaskController = require('../controllers/task.controller');
 const AuthMiddleware = require('../middleware/authMiddleware');
 
-// Helper function to handle async errors properly
-const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
-
 router.post(
-  '/tasks', 
+  '/tasks',
   AuthMiddleware.authenticateUser,
   AuthMiddleware.authorizeRoles('client', 'admin'),
-  asyncHandler(TaskController.createTask)  // Properly wrapping async function
+  TaskController.createTask  
 );
 
 router.get(
-  '/tasks', 
+  '/tasks',
   AuthMiddleware.authenticateUser,
-  asyncHandler(TaskController.getAllTasks) // Properly wrapping async function
+  TaskController.getAllTasks
 );
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
 
 module.exports = router;
