@@ -1,8 +1,8 @@
 require('dotenv').config(); 
 const express = require('express');
 const app = require('./app');
-const { PORT, NODE_ENV } = require('./config/environment');
-const supabase = require('./config/SupabaseClient');
+const { PORT, NODE_ENV } = require('./src/config/environment');
+const supabase = require('./src/config/SupabaseClient');
 
 async function startServer() {
   try {

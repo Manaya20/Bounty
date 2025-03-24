@@ -1,21 +1,17 @@
-const { LOG_LEVEL } = require('../config/environment');
 const pino = require('pino');
+const { LOG_LEVEL } = require('../config/environment');
 
-const levels = {
-  error: 50,
-  warn: 40,
-  info: 30,
-  debug: 20,
-  trace: 10
-};
-
+// Standard Pino logger with default levels
 const logger = pino({
-  level: LOG_LEVEL,
-  timestamp: () => `,"time":"${new Date().toISOString()}"`,
-  formatters: {
-    level: (label) => ({ level: label.toUpperCase() })
-  },
-  customLevels: levels
+  level: LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
+      ignore: 'pid,hostname'
+    }
+  }
 });
 
 module.exports = logger;
