@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import CreateTask from './pages/CreateTask';
 import BrowseTasks from './pages/BrowseTasks';
 import Profile from './pages/Profile';
+import TaskDetails from './pages/TaskDetails';
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/create-task" element={<CreateTask />} />
         <Route path="/browse-tasks" element={<BrowseTasks />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/task/:taskId" element={<TaskDetails />} />
         <Route path="*" element={<Landing />} /> {/* Fallback route */}
       </Routes>
     </Router>

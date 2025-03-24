@@ -7,7 +7,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('tasker'); // Default role is "tasker"
+  const [role, setRole] = useState('client'); // Default role is "tasker"
   const [passwordError, setPasswordError] = useState(''); // For password validation
   const navigate = useNavigate();
 

@@ -2,9 +2,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Typography, Button, Box } from '@mui/material';
+import Navbar from '../components/Navbar';
+
 
 const Landing = () => {
   return (
+    <>
+    <Navbar />
     <Container maxWidth="lg" sx={{ textAlign: 'center', mt: { xs: 8, md: 12 }, mb: { xs: 6, md: 10 } }}>
       {/* Hero Section */}
       <Box>
@@ -47,6 +51,7 @@ const Landing = () => {
         </Button>
       </Box>
     </Container>
+    </>
   );
 };
 

@@ -6,20 +6,16 @@ import { Container, Typography, Button, Box } from '@mui/material';
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  // Simulate user role (client or tasker)
-  const userRole = 'tasker'; // Replace this with actual user role from Supabase Auth
+  // Simulate user role (replace this with actual role from Supabase Auth)
+  const userRole = 'tasker'; // Example: 'tasker' or 'client'
 
   return (
     <Container maxWidth="lg" sx={{ textAlign: 'center', mt: { xs: 8, md: 12 }, mb: { xs: 6, md: 10 } }}>
-      {/* Welcome Message */}
       <Typography variant="h4" gutterBottom sx={{ fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 'bold' }}>
         Welcome to Your Dashboard
       </Typography>
-      <Typography variant="subtitle1" gutterBottom sx={{ fontSize: { xs: '0.875rem', md: '1rem' }, color: 'text.secondary' }}>
-        Here's what you can do today.
-      </Typography>
 
-      {/* Actions Based on Role */}
+      {/* Role-Specific Content */}
       {userRole === 'client' && (
         <Box sx={{ mt: { xs: 4, md: 6 } }}>
           <Button
@@ -27,12 +23,7 @@ const Dashboard = () => {
             to="/create-task"
             variant="contained"
             size="large"
-            sx={{
-              mr: 2,
-              px: 4,
-              py: 1.5,
-              fontSize: { xs: '0.875rem', md: '1rem' },
-            }}
+            sx={{ mr: 2, px: 4, py: 1.5, fontSize: { xs: '0.875rem', md: '1rem' } }}
           >
             Create a Task
           </Button>
@@ -40,11 +31,7 @@ const Dashboard = () => {
             onClick={() => navigate('/browse-tasks')}
             variant="outlined"
             size="large"
-            sx={{
-              px: 4,
-              py: 1.5,
-              fontSize: { xs: '0.875rem', md: '1rem' },
-            }}
+            sx={{ px: 4, py: 1.5, fontSize: { xs: '0.875rem', md: '1rem' } }}
           >
             Browse Tasks
           </Button>
@@ -57,12 +44,7 @@ const Dashboard = () => {
             onClick={() => navigate('/browse-tasks')}
             variant="contained"
             size="large"
-            sx={{
-              mr: 2,
-              px: 4,
-              py: 1.5,
-              fontSize: { xs: '0.875rem', md: '1rem' },
-            }}
+            sx={{ mr: 2, px: 4, py: 1.5, fontSize: { xs: '0.875rem', md: '1rem' } }}
           >
             Find Tasks
           </Button>
@@ -71,11 +53,7 @@ const Dashboard = () => {
             to="/profile"
             variant="outlined"
             size="large"
-            sx={{
-              px: 4,
-              py: 1.5,
-              fontSize: { xs: '0.875rem', md: '1rem' },
-            }}
+            sx={{ px: 4, py: 1.5, fontSize: { xs: '0.875rem', md: '1rem' } }}
           >
             Update Profile
           </Button>
