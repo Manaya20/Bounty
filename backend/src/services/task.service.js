@@ -7,24 +7,11 @@ class TaskService {
       .select('*');
 
     // Apply filters
-    if (filters.client_id) {
-      query = query.eq('client_id', filters.client_id);
-    }
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    }
-    if (filters.complexity) {
-      query = query.eq('complexity', filters.complexity);
-    }
-    if (filters.category) {
-      query = query.eq('category', filters.category);
-    }
-    if (filters.is_remote !== undefined) {
-      query = query.eq('is_remote', filters.is_remote);
-    }
-    if (filters.required_skills) {
-      query = query.contains('required_skills', filters.required_skills);
-    }
+    if (filters.client_id) query = query.eq('client_id', filters.client_id);
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.complexity) query = query.eq('complexity', filters.complexity);
+    if (filters.min_budget) query = query.gte('budget', filters.min_budget);
+    if (filters.max_budget) query = query.lte('budget', filters.max_budget);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -45,21 +32,26 @@ class TaskService {
   static async createTask(taskData) {
     // Validate required fields
     if (!taskData.title || !taskData.description || !taskData.budget || !taskData.time_limit) {
-      throw new Error('Missing required fields');
+      throw new Error('Missing required fields: title, description, budget, time_limit');
     }
 
-    // Set default values
-    const completeTaskData = {
-      status: 'OPEN',
-      is_remote: true,
-      ...taskData,
-      required_skills: taskData.required_skills || [],
-      attachments: taskData.attachments || []
-    };
+    // Validate complexity enum if provided
+    if (taskData.complexity) {
+      const validComplexities = ['EASY', 'MEDIUM', 'HARD'];
+      if (!validComplexities.includes(taskData.complexity)) {
+        throw new Error(`Invalid complexity. Must be one of: ${validComplexities.join(', ')}`);
+      }
+    }
 
     const { data, error } = await SupabaseConfig.client
       .from('tasks')
-      .insert(completeTaskData)
+      .insert({
+        ...taskData,
+        client_id: taskData.client_id || null, // Make client_id optional
+        status: taskData.status || 'OPEN', // Default status
+        required_skills: taskData.required_skills || [], // Default empty array
+        attachments: taskData.attachments || [] // Default empty array
+      })
       .select()
       .single();
 
@@ -68,11 +60,19 @@ class TaskService {
   }
 
   static async updateTask(taskId, updateData) {
-    // Remove fields that shouldn't be updated
-    const { id, client_id, created_at, ...sanitizedData } = updateData;
+    // Remove non-updatable fields
+    const { id, created_at, ...sanitizedData } = updateData;
     
     // Add updated_at timestamp
     sanitizedData.updated_at = new Date().toISOString();
+
+    // Validate status enum if provided
+    if (sanitizedData.status) {
+      const validStatuses = ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+      if (!validStatuses.includes(sanitizedData.status)) {
+        throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+      }
+    }
 
     const { data, error } = await SupabaseConfig.client
       .from('tasks')
@@ -92,36 +92,6 @@ class TaskService {
       .eq('id', taskId);
 
     if (error) throw error;
-  }
-
-  static async searchTasks(searchParams) {
-    let query = SupabaseConfig.client
-      .from('tasks')
-      .select('*')
-      .eq('status', 'OPEN');
-
-    if (searchParams.query) {
-      query = query.or(`title.ilike.%${searchParams.query}%,description.ilike.%${searchParams.query}%`);
-    }
-    if (searchParams.category) {
-      query = query.eq('category', searchParams.category);
-    }
-    if (searchParams.complexity) {
-      query = query.eq('complexity', searchParams.complexity);
-    }
-    if (searchParams.min_budget) {
-      query = query.gte('budget', searchParams.min_budget);
-    }
-    if (searchParams.max_budget) {
-      query = query.lte('budget', searchParams.max_budget);
-    }
-    if (searchParams.required_skills) {
-      query = query.overlaps('required_skills', searchParams.required_skills);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return data;
   }
 }
 

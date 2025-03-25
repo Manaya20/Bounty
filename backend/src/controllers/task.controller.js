@@ -13,6 +13,9 @@ class TaskController {
   static async getTask(req, res, next) {
     try {
       const task = await TaskService.getTaskById(req.params.id);
+      if (!task) {
+        return res.status(404).json({ status: 'fail', message: 'Task not found' });
+      }
       res.json(task);
     } catch (err) {
       next(err);
@@ -21,7 +24,13 @@ class TaskController {
 
   static async createTask(req, res, next) {
     try {
-      const newTask = await TaskService.createTask(req.body);
+      // For testing without auth - client_id is optional
+      const taskData = {
+        ...req.body,
+        client_id: req.body.client_id || null
+      };
+      
+      const newTask = await TaskService.createTask(taskData);
       res.status(201).json(newTask);
     } catch (err) {
       next(err);
@@ -41,15 +50,6 @@ class TaskController {
     try {
       await TaskService.deleteTask(req.params.id);
       res.status(204).end();
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async searchTasks(req, res, next) {
-    try {
-      const tasks = await TaskService.searchTasks(req.query);
-      res.json(tasks);
     } catch (err) {
       next(err);
     }
