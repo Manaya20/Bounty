@@ -1,8 +1,8 @@
-require('dotenv').config(); 
-const express = require('express');
-const app = require('./app');
-const { PORT, NODE_ENV } = require('./src/config/environment');
-const supabase = require('./src/config/SupabaseClient');
+import 'dotenv/config';
+import app from './app.js';
+import { PORT, NODE_ENV } from './src/config/environment.js';
+import supabase from './src/config/SupabaseClient.js';
+
 async function startServer() {
   try {
     const isConnected = await supabase.checkConnection();

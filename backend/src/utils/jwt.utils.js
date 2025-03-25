@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/environment.js';
+import environment from '../config/environment.js';
+const { JWT_SECRET } = environment;
 
 class JWTUtils {
   static generateAuthTokens(user) {
