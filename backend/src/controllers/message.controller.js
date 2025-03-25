@@ -1,19 +1,10 @@
 const MessageService = require('../services/message.service');
 
 class MessageController {
-  static async getAllMessages(req, res, next) {
+  static async getMessages(req, res, next) {
     try {
-      const messages = await MessageService.getMessages();
+      const messages = await MessageService.getMessages(req.query.task_id);
       res.json(messages);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  static async getMessage(req, res, next) {
-    try {
-      const message = await MessageService.getMessage(req.params.id);
-      res.json(message);
     } catch (err) {
       next(err);
     }
@@ -28,10 +19,10 @@ class MessageController {
     }
   }
 
-  static async deleteMessage(req, res, next) {
+  static async markAsRead(req, res, next) {
     try {
-      await MessageService.deleteMessage(req.params.id);
-      res.status(204).end();
+      const message = await MessageService.markAsRead(req.params.id);
+      res.json(message);
     } catch (err) {
       next(err);
     }

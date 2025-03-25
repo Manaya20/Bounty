@@ -36,11 +36,14 @@ const messageRouter = require('./src/routes/message.routes');
 const profileRouter = require('./src/routes/profile.routes');
 const proposalRouter = require('./src/routes/proposal.routes');
 const reviewRouter = require('./src/routes/review.routes');
+const userRouter = require('./src/routes/user.routes');
+
 
 app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/profiles', profileRouter);
 app.use('/api/v1/proposals', proposalRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/users', userRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

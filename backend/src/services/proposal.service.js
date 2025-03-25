@@ -1,60 +1,52 @@
 const SupabaseConfig = require('../config/SupabaseClient');
 
 class ProposalService {
-  static async getProposals(userId) {
+  static async createProposal({ tasker_id, task_id, bid_amount, estimated_days, cover_message }) {
+    const { data, error } = await SupabaseConfig.client
+      .from('proposals')
+      .insert({
+        tasker_id,
+        task_id,
+        bid_amount,
+        estimated_days,
+        cover_message,
+        status: 'PENDING'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async updateProposalStatus(proposalId, status) {
+    const validStatuses = ['PENDING', 'ACCEPTED', 'REJECTED'];
+    if (!validStatuses.includes(status)) {
+      throw new Error('Invalid proposal status');
+    }
+
+    const { data, error } = await SupabaseConfig.client
+      .from('proposals')
+      .update({ 
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', proposalId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getTaskProposals(taskId) {
     const { data, error } = await SupabaseConfig.client
       .from('proposals')
       .select('*')
-      .eq('user_id', userId);
-    
+      .eq('task_id', taskId);
+
     if (error) throw error;
     return data;
-  }
-
-  static async getProposal(id, userId) {
-    const { data, error } = await SupabaseConfig.client
-      .from('proposals')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId)
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  static async createProposal(proposalData) {
-    const { data, error } = await SupabaseConfig.client
-      .from('proposals')
-      .insert(proposalData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  static async updateProposal(id, proposalData, userId) {
-    const { data, error } = await SupabaseConfig.client
-      .from('proposals')
-      .update(proposalData)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  static async deleteProposal(id, userId) {
-    const { error } = await SupabaseConfig.client
-      .from('proposals')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-    
-    if (error) throw error;
   }
 }
 

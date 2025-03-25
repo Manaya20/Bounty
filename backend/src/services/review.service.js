@@ -1,56 +1,43 @@
 const SupabaseConfig = require('../config/SupabaseClient');
 
 class ReviewService {
-  static async getReviews(filters = {}) {
-    let query = SupabaseConfig.client
+  static async createReview({ task_id, reviewer_id, tasker_id, rating, comment }) {
+    if (rating < 1 || rating > 5) {
+      throw new Error('Rating must be between 1 and 5');
+    }
+
+    const { data, error } = await SupabaseConfig.client
       .from('reviews')
-      .select('*');
+      .insert({
+        task_id,
+        reviewer_id,
+        tasker_id,
+        rating,
+        comment
+      })
+      .select()
+      .single();
 
-    if (filters.reviewee_id) {
-      query = query.eq('reviewee_id', filters.reviewee_id);
-    }
-
-    if (filters.reviewer_id) {
-      query = query.eq('reviewer_id', filters.reviewer_id);
-    }
-
-    const { data, error } = await query;
-    
     if (error) throw error;
     return data;
   }
 
-  static async getReview(id) {
+  static async getTaskerReviews(taskerId) {
     const { data, error } = await SupabaseConfig.client
       .from('reviews')
       .select('*')
-      .eq('id', id)
-      .single();
-    
+      .eq('tasker_id', taskerId);
+
     if (error) throw error;
     return data;
   }
 
-  static async createReview(reviewData) {
+  static async getTaskReviews(taskId) {
     const { data, error } = await SupabaseConfig.client
       .from('reviews')
-      .insert(reviewData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
+      .select('*')
+      .eq('task_id', taskId);
 
-  static async updateReview(id, reviewData, userId) {
-    const { data, error } = await SupabaseConfig.client
-      .from('reviews')
-      .update(reviewData)
-      .eq('id', id)
-      .eq('reviewer_id', userId)
-      .select()
-      .single();
-    
     if (error) throw error;
     return data;
   }
