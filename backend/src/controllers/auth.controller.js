@@ -1,5 +1,6 @@
-import AuthService from '../services/auth.service.js';
+// src/controllers/auth.controller.js
 import asyncHandler from '../utils/asyncHandler.js';
+import AuthService from '../services/auth.service.js';
 import ErrorResponse from '../utils/error.utils.js';
 
 class AuthController {
@@ -9,17 +10,8 @@ class AuthController {
   });
 
   static login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    
-    const { user, tokens } = await AuthService.loginUser(email, password);
-
-    res.json({
-      status: 'success',
-      data: {
-        user,
-        tokens
-      }
-    });
+    const { user, tokens } = await AuthService.loginUser(req.body.email, req.body.password);
+    res.json({ status: 'success', data: { user, tokens } });
   });
 
   static logout = asyncHandler(async (req, res) => {
@@ -28,15 +20,9 @@ class AuthController {
   });
 
   static refreshToken = asyncHandler(async (req, res) => {
-    const { refreshToken } = req.body;
-    
-    const tokens = await AuthService.refreshAuthToken(refreshToken);
-
-    res.json({
-      status: 'success',
-      data: tokens
-    });
+    const tokens = await AuthService.refreshAuthToken(req.body.refreshToken);
+    res.json({ status: 'success', data: tokens });
   });
 }
 
-module.exports = AuthController;
+export default AuthController;  

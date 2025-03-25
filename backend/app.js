@@ -27,13 +27,9 @@ app.use(limiter);
 // Body parsing
 app.use(express.json({ limit: '10kb' }));
 
-// Import routes
-const authRoutes = require('./src/routes/auth.routes');
-const taskRoutes = require('./src/routes/task.routes');
-
-// Mount routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/tasks', taskRoutes);
+// Task routes
+const taskRouter = require('./src/routes/task.routes');
+app.use('/api/v1/tasks', taskRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
