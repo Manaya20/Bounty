@@ -5,10 +5,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const logger = require('./src/utils/logger');
 
-// Create Express app
+
 const app = express();
 
-// Security middleware
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
@@ -16,10 +15,9 @@ app.use(cors({
     : ['http://localhost:3000']
 }));
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 100, 
   message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
@@ -30,6 +28,10 @@ app.use(express.json({ limit: '10kb' }));
 // Task routes
 const taskRouter = require('./src/routes/task.routes');
 app.use('/api/v1/tasks', taskRouter);
+
+//auth routes
+const authRouter = require('./src/routes/auth.routes');
+app.use('/api/v1/auth', authRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

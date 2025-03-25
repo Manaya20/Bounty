@@ -1,14 +1,26 @@
-// src/utils/jwt.utils.js
-const { JWT_SECRET } = require('../config/environment');
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/environment.js';
 
 class JWTUtils {
   static generateAuthTokens(user) {
-    const jwt = require('jsonwebtoken');
-    return {
-      accessToken: jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '15m' }),
-      refreshToken: jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' })
-    };
+    const accessToken = jwt.sign(
+      { id: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  static verifyToken(token) {
+    return jwt.verify(token, JWT_SECRET);
   }
 }
 
-module.exports = JWTUtils;
+export default JWTUtils;
