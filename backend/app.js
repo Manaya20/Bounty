@@ -31,10 +31,23 @@ app.use(express.json({ limit: '10kb' }));
 const taskRouter = require('./src/routes/task.routes');
 app.use('/api/v1/tasks', taskRouter);
 
+
+const messageRouter = require('./src/routes/message.routes');
+const profileRouter = require('./src/routes/profile.routes');
+const proposalRouter = require('./src/routes/proposal.routes');
+const reviewRouter = require('./src/routes/review.routes');
+
+app.use('/api/v1/messages', messageRouter);
+app.use('/api/v1/profiles', profileRouter);
+app.use('/api/v1/proposals', proposalRouter);
+app.use('/api/v1/reviews', reviewRouter);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
+
+
 
 // 404 handler
 app.all('*', (req, res) => {
