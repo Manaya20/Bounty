@@ -1,63 +1,44 @@
-const { JWT_SECRET } = require('../config/environment');
-const JWTUtils = require('../utils/jwt.utils');
-const supabase = require('../config/SupabaseClient');
+import JWTUtils from '../utils/jwt.utils.js';
+import ErrorResponse from '../utils/error.utils.js';
 
 class AuthMiddleware {
-  constructor() {
-    this.jwtUtils = new JWTUtils(JWT_SECRET);
-  }
-
-  async authenticateUser(req, res, next) {
+  authenticate = async (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'No token provided or invalid format' });
+      
+      if (!authHeader?.startsWith('Bearer ')) {
+        throw new ErrorResponse('Unauthorized', 401);
       }
 
       const token = authHeader.split(' ')[1];
-      
-      // First try JWT verification
-      const decoded = this.jwtUtils.verifyToken(token);
-      if (decoded) {
-        req.user = decoded;
-        return next();
-      }
+      const decoded = JWTUtils.verifyToken(token);
 
-      // Fallback to Supabase verification if JWT fails
-      const { data: { user }, error } = await supabase
-        .getInstance()
-        .auth
-        .getUser(token);
+      // Get user from DB
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', decoded.id)
+        .single();
 
       if (error || !user) {
-        return res.status(401).json({ error: 'Invalid token' });
+        throw new ErrorResponse('Unauthorized', 401);
       }
 
       req.user = user;
       next();
     } catch (error) {
-      console.error('Authentication error:', error);
-      res.status(500).json({ error: 'Authentication failed' });
+      next(error);
     }
-  }
+  };
 
-  authorizeRoles(...allowedRoles) {
+  authorizeRoles = (...roles) => {
     return (req, res, next) => {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' });
+      if (!roles.includes(req.user.role)) {
+        throw new ErrorResponse('Forbidden', 403);
       }
-
-      const userRole = req.user.role || req.user.user_metadata?.role;
-      
-      if (!userRole || !allowedRoles.includes(userRole)) {
-        return res.status(403).json({ 
-          error: 'Access denied. Insufficient permissions.' 
-        });
-      }
-      
       next();
     };
-  }
+  };
 }
 
-module.exports = new AuthMiddleware();
+export default new AuthMiddleware();
