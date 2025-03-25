@@ -1,17 +1,14 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import logger from './src/utils/logger.js';
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const logger = require('./src/utils/logger');
 
-// Import routes
-import taskRouter from './src/routes/task.routes.js';
-import authRouter from './src/routes/auth.routes.js';
-
+// Create Express app
 const app = express();
 
-// Middleware setup
+// Security middleware
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
@@ -19,20 +16,22 @@ app.use(cors({
     : ['http://localhost:3000']
 }));
 
+// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per window
   message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
 
+// Body parsing
 app.use(express.json({ limit: '10kb' }));
 
-// Routes
+// Task routes
+const taskRouter = require('./src/routes/task.routes');
 app.use('/api/v1/tasks', taskRouter);
-app.use('/api/v1/auth', authRouter);
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
@@ -45,13 +44,14 @@ app.all('*', (req, res) => {
   });
 });
 
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
   logger.error(`ERROR: ${err.message}`);
+  
   res.status(err.statusCode || 500).json({
     status: 'error',
     message: err.message || 'Something went wrong'
   });
 });
 
-export default app;
+module.exports = app;
