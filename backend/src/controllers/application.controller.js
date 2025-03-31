@@ -20,8 +20,24 @@ exports.getAllApplications = async (req, res) => {
 
 exports.createApplication = async (req, res) => {
     try {
-        const applicationData = req.body;
-        const newApplication = await applicationService.createApplication(applicationData);
+        const { task_id, tasker_id, message, status } = req.body;
+
+        // Validate required fields
+        if (!task_id || !tasker_id || !message || !status) {
+            return res.status(400).json({
+                error: "Missing required fields: task_id, tasker_id, message, and status are required."
+            });
+        }
+
+        // Ensure status is valid
+        const validStatuses = ['pending', 'accepted', 'rejected'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                error: `Invalid status. Must be one of: ${validStatuses.join(', ')}.`
+            });
+        }
+
+        const newApplication = await applicationService.createApplication(req.body);
         res.status(201).json(newApplication);
     } catch (error) {
         res.status(500).json({ error: error.message });
