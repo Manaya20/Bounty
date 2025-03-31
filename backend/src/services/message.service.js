@@ -1,7 +1,7 @@
-const supabaseClient = require('../../src/config/SupabaseClient');
+const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
 
 exports.getMessage = async (id) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('messages')
         .select('*')
         .eq('id', id)
@@ -12,7 +12,7 @@ exports.getMessage = async (id) => {
 };
 
 exports.createMessage = async (messageData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('messages')
         .insert([messageData])
         .select()
@@ -23,7 +23,7 @@ exports.createMessage = async (messageData) => {
 };
 
 exports.updateMessage = async (id, updatedData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('messages')
         .update(updatedData)
         .eq('id', id)
@@ -35,7 +35,7 @@ exports.updateMessage = async (id, updatedData) => {
 };
 
 exports.deleteMessage = async (id) => {
-    const { error } = await supabase
+    const { error } = await supabaseClient.client
         .from('messages')
         .delete()
         .eq('id', id);

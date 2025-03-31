@@ -1,7 +1,7 @@
-const { supabase } = require('../../app');
+const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
 
 exports.getApplication = async (id) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('applications')
         .select('*')
         .eq('id', id)
@@ -12,7 +12,7 @@ exports.getApplication = async (id) => {
 };
 
 exports.createApplication = async (applicationData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('applications')
         .insert([applicationData])
         .select()
@@ -23,7 +23,7 @@ exports.createApplication = async (applicationData) => {
 };
 
 exports.updateApplication = async (id, updatedData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('applications')
         .update(updatedData)
         .eq('id', id)
@@ -35,7 +35,7 @@ exports.updateApplication = async (id, updatedData) => {
 };
 
 exports.deleteApplication = async (id) => {
-    const { error } = await supabase
+    const { error } = await supabaseClient.client
         .from('applications')
         .delete()
         .eq('id', id);

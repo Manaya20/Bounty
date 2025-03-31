@@ -1,6 +1,7 @@
-const supabaseClient = require('../../src/config/SupabaseClient');
+const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
+
 exports.getAttachment = async (id) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('attachments')
         .select('*')
         .eq('id', id)
@@ -11,7 +12,7 @@ exports.getAttachment = async (id) => {
 };
 
 exports.createAttachment = async (attachmentData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('attachments')
         .insert([attachmentData])
         .select()
@@ -22,7 +23,7 @@ exports.createAttachment = async (attachmentData) => {
 };
 
 exports.updateAttachment = async (id, updatedData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('attachments')
         .update(updatedData)
         .eq('id', id)
@@ -34,7 +35,7 @@ exports.updateAttachment = async (id, updatedData) => {
 };
 
 exports.deleteAttachment = async (id) => {
-    const { error } = await supabase
+    const { error } = await supabaseClient.client
         .from('attachments')
         .delete()
         .eq('id', id);

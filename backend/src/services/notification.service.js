@@ -1,7 +1,7 @@
-const supabaseClient = require('../../src/config/SupabaseClient');
+const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
 
 exports.getNotification = async (id) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('notifications')
         .select('*')
         .eq('id', id)
@@ -12,7 +12,7 @@ exports.getNotification = async (id) => {
 };
 
 exports.createNotification = async (notificationData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('notifications')
         .insert([notificationData])
         .select()
@@ -23,7 +23,7 @@ exports.createNotification = async (notificationData) => {
 };
 
 exports.updateNotification = async (id, updatedData) => {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient.client
         .from('notifications')
         .update(updatedData)
         .eq('id', id)
@@ -35,7 +35,7 @@ exports.updateNotification = async (id, updatedData) => {
 };
 
 exports.deleteNotification = async (id) => {
-    const { error } = await supabase
+    const { error } = await supabaseClient.client
         .from('notifications')
         .delete()
         .eq('id', id);
