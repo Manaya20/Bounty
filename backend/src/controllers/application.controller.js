@@ -9,6 +9,14 @@ exports.getApplication = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getAllApplications = async (req, res) => {
+    try {
+        const applications = await applicationService.getAllApplications();
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 exports.createApplication = async (req, res) => {
     try {

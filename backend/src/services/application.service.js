@@ -11,6 +11,14 @@ exports.getApplication = async (id) => {
     return data;
 };
 
+exports.getAllApplications = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('applications')
+        .select('*');
+
+    if (error) throw new Error(error.message);
+    return data;
+};
 exports.createApplication = async (applicationData) => {
     const { data, error } = await supabaseClient.client
         .from('applications')

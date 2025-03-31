@@ -11,6 +11,15 @@ exports.getMessage = async (id) => {
     return data;
 };
 
+exports.getAllMessages = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('messages')
+        .select('*');
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+
 exports.createMessage = async (messageData) => {
     const { data, error } = await supabaseClient.client
         .from('messages')

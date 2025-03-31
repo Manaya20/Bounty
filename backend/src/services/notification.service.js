@@ -11,6 +11,15 @@ exports.getNotification = async (id) => {
     return data;
 };
 
+exports.getAllNotifications = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('notifications')
+        .select('*');
+
+    if (error) throw new Error(error.message);
+    return data;
+}
+
 exports.createNotification = async (notificationData) => {
     const { data, error } = await supabaseClient.client
         .from('notifications')
