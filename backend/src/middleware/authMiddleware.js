@@ -1,44 +1,26 @@
-import JWTUtils from '../utils/jwt.utils.js';
-import ErrorResponse from '../utils/error.utils.js';
+const { verifyToken } = require('../utils/jwt.utils');
 
-class AuthMiddleware {
-  authenticate = async (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization;
-      
-      if (!authHeader?.startsWith('Bearer ')) {
-        throw new ErrorResponse('Unauthorized', 401);
-      }
+        // Extract the token from the Authorization header
+        const authHeader = req.headers.authorization;
 
-      const token = authHeader.split(' ')[1];
-      const decoded = JWTUtils.verifyToken(token);
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: "Authorization header missing or invalid." });
+        }
 
-      // Get user from DB
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', decoded.id)
-        .single();
+        // Extract the token
+        const token = authHeader.split(' ')[1];
 
-      if (error || !user) {
-        throw new ErrorResponse('Unauthorized', 401);
-      }
+        // Verify the token
+        const decoded = verifyToken(token);
 
-      req.user = user;
-      next();
+        // Attach the user ID to the request object
+        req.userId = decoded.id;
+
+        // Proceed to the next middleware or route handler
+        next();
     } catch (error) {
-      next(error);
+        return res.status(401).json({ error: error.message });
     }
-  };
-
-  authorizeRoles = (...roles) => {
-    return (req, res, next) => {
-      if (!roles.includes(req.user.role)) {
-        throw new ErrorResponse('Forbidden', 403);
-      }
-      next();
-    };
-  };
-}
-
-export default new AuthMiddleware();
+};

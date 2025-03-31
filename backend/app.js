@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const logger = require('./src/utils/logger');
+const authMiddleware = require('./src/middleware/authMiddleware'); // Import auth middleware
 
 // Create Express app
 const app = express();
@@ -27,25 +28,27 @@ app.use(limiter);
 // Body parsing
 app.use(express.json({ limit: '10kb' }));
 
-// Task routes
+// Import and use all routes
 const taskRouter = require('./src/routes/task.routes');
-app.use('/api/v1/tasks', taskRouter);
-
 const messageRouter = require('./src/routes/message.routes');
 const profileRouter = require('./src/routes/profile.routes');
 const reviewRouter = require('./src/routes/review.routes');
 const applicationRouter = require('./src/routes/application.routes');
 const attachmentRouter = require('./src/routes/attachment.routes');
 const notificationRouter = require('./src/routes/notification.routes');
+const authRouter = require('./src/routes/auth.routes'); // Auth routes
 
-app.use('/api/v1/messages', messageRouter);
-app.use('/api/v1/profiles', profileRouter);
-app.use('/api/v1/reviews', reviewRouter);
-app.use('/api/v1/applications', applicationRouter);
-app.use('/api/v1/attachments', attachmentRouter);
-app.use('/api/v1/notifications', notificationRouter);
+// Register routes
+app.use('/api/v1/tasks', authMiddleware.authenticate, taskRouter); // Protect tasks routes
+app.use('/api/v1/messages', authMiddleware.authenticate, messageRouter); // Protect messages routes
+app.use('/api/v1/profiles', authMiddleware.authenticate, profileRouter); // Protect profiles routes
+app.use('/api/v1/reviews', authMiddleware.authenticate, reviewRouter); // Protect reviews routes
+app.use('/api/v1/applications', authMiddleware.authenticate, applicationRouter); // Protect applications routes
+app.use('/api/v1/attachments', authMiddleware.authenticate, attachmentRouter); // Protect attachments routes
+app.use('/api/v1/notifications', authMiddleware.authenticate, notificationRouter); // Protect notifications routes
+app.use('/api/v1/auth', authRouter); // Keep auth routes unprotected
 
-// Health check endpoint
+// Health check endpoint (unprotected)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
