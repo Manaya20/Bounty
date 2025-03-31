@@ -1,8 +1,8 @@
 const supabaseClient = require('../../src/config/SupabaseClient');
 
-exports.getMessage = async (id) => {
+exports.getNotification = async (id) => {
     const { data, error } = await supabase
-        .from('messages')
+        .from('notifications')
         .select('*')
         .eq('id', id)
         .single();
@@ -11,10 +11,10 @@ exports.getMessage = async (id) => {
     return data;
 };
 
-exports.createMessage = async (messageData) => {
+exports.createNotification = async (notificationData) => {
     const { data, error } = await supabase
-        .from('messages')
-        .insert([messageData])
+        .from('notifications')
+        .insert([notificationData])
         .select()
         .single();
 
@@ -22,9 +22,9 @@ exports.createMessage = async (messageData) => {
     return data;
 };
 
-exports.updateMessage = async (id, updatedData) => {
+exports.updateNotification = async (id, updatedData) => {
     const { data, error } = await supabase
-        .from('messages')
+        .from('notifications')
         .update(updatedData)
         .eq('id', id)
         .select()
@@ -34,9 +34,9 @@ exports.updateMessage = async (id, updatedData) => {
     return data;
 };
 
-exports.deleteMessage = async (id) => {
+exports.deleteNotification = async (id) => {
     const { error } = await supabase
-        .from('messages')
+        .from('notifications')
         .delete()
         .eq('id', id);
 

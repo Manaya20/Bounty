@@ -1,59 +1,42 @@
-const TaskService = require('../services/task.service');
+const taskService = require('../services/task.service');
 
-class TaskController {
-  static async getAllTasks(req, res, next) {
+exports.getTask = async (req, res) => {
     try {
-      const tasks = await TaskService.getTasks(req.query);
-      res.json(tasks);
-    } catch (err) {
-      next(err);
+        const { id } = req.params;
+        const task = await taskService.getTask(id);
+        res.status(200).json(task);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
+};
 
-  static async getTask(req, res, next) {
+exports.createTask = async (req, res) => {
     try {
-      const task = await TaskService.getTaskById(req.params.id);
-      if (!task) {
-        return res.status(404).json({ status: 'fail', message: 'Task not found' });
-      }
-      res.json(task);
-    } catch (err) {
-      next(err);
+        const taskData = req.body;
+        const newTask = await taskService.createTask(taskData);
+        res.status(201).json(newTask);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
+};
 
-  static async createTask(req, res, next) {
+exports.updateTask = async (req, res) => {
     try {
-      // For testing without auth - client_id is optional
-      const taskData = {
-        ...req.body,
-        client_id: req.body.client_id || null
-      };
-      
-      const newTask = await TaskService.createTask(taskData);
-      res.status(201).json(newTask);
-    } catch (err) {
-      next(err);
+        const { id } = req.params;
+        const updatedData = req.body;
+        const updatedTask = await taskService.updateTask(id, updatedData);
+        res.status(200).json(updatedTask);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
+};
 
-  static async updateTask(req, res, next) {
+exports.deleteTask = async (req, res) => {
     try {
-      const updatedTask = await TaskService.updateTask(req.params.id, req.body);
-      res.json(updatedTask);
-    } catch (err) {
-      next(err);
+        const { id } = req.params;
+        await taskService.deleteTask(id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
-
-  static async deleteTask(req, res, next) {
-    try {
-      await TaskService.deleteTask(req.params.id);
-      res.status(204).end();
-    } catch (err) {
-      next(err);
-    }
-  }
-}
-
-module.exports = TaskController;
+};

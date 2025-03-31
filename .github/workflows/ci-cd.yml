@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js for frontend/backend
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Step 3: Install dependencies and run tests (Frontend)
+      - name: Install frontend dependencies and test
+        run: |
+          cd frontend
+          npm install
+          npm run build # Build the frontend (e.g., Vite React)
+          npm test # Run frontend tests
+
+      # Step 4: Install dependencies and run tests (Backend)
+      - name: Install backend dependencies and test
+        run: |
+          cd backend
+          npm install
+          #npm test # Run backend tests
+
+      # Step 5: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Replace with your region
+
+      # Step 6: Deploy frontend to S3
+      - name: Deploy frontend to S3
+        run: |
+          aws s3 sync bounty-frontend/dist s3://your-bucket-name --delete
+          aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*" # Optional: Invalidate CloudFront cache
+
+      # Step 7: Deploy backend to Elastic Beanstalk
+      - name: Deploy backend to Elastic Beanstalk
+        run: |
+          cd bounty-backend
+          zip -r app.zip . # Zip the backend code
+          aws elasticbeanstalk update-environment --application-name YOUR_APP_NAME --environment-name YOUR_ENV_NAME --version-label $(date +%s)

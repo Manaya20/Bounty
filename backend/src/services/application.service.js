@@ -1,8 +1,8 @@
-const supabaseClient = require('../../src/config/SupabaseClient');
+const { supabase } = require('../../app');
 
-exports.getMessage = async (id) => {
+exports.getApplication = async (id) => {
     const { data, error } = await supabase
-        .from('messages')
+        .from('applications')
         .select('*')
         .eq('id', id)
         .single();
@@ -11,10 +11,10 @@ exports.getMessage = async (id) => {
     return data;
 };
 
-exports.createMessage = async (messageData) => {
+exports.createApplication = async (applicationData) => {
     const { data, error } = await supabase
-        .from('messages')
-        .insert([messageData])
+        .from('applications')
+        .insert([applicationData])
         .select()
         .single();
 
@@ -22,9 +22,9 @@ exports.createMessage = async (messageData) => {
     return data;
 };
 
-exports.updateMessage = async (id, updatedData) => {
+exports.updateApplication = async (id, updatedData) => {
     const { data, error } = await supabase
-        .from('messages')
+        .from('applications')
         .update(updatedData)
         .eq('id', id)
         .select()
@@ -34,9 +34,9 @@ exports.updateMessage = async (id, updatedData) => {
     return data;
 };
 
-exports.deleteMessage = async (id) => {
+exports.deleteApplication = async (id) => {
     const { error } = await supabase
-        .from('messages')
+        .from('applications')
         .delete()
         .eq('id', id);
 

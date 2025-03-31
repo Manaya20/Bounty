@@ -23,7 +23,7 @@ class SupabaseConfig {
   async checkConnection() {
     try {
       const { data, error } = await this.client
-        .from('users')
+        .from('users') // Replace 'users' with a table in your database
         .select('*')
         .limit(1);
 

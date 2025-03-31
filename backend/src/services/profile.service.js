@@ -1,28 +1,44 @@
-const SupabaseConfig = require('../config/SupabaseClient');
+const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
 
-class ProfileService {
-  static async getProfile(userId) {
-    const { data, error } = await SupabaseConfig.client
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-    
-    if (error) throw error;
+exports.getProfile = async (id) => {
+    const { data, error } = await supabaseClient.client
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) throw new Error(error.message);
     return data;
-  }
+};
 
-  static async updateProfile(userId, profileData) {
-    const { data, error } = await SupabaseConfig.client
-      .from('profiles')
-      .update(profileData)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    
-    if (error) throw error;
+exports.createProfile = async (profileData) => {
+    const { data, error } = await supabaseClient.client
+        .from('profiles')
+        .insert([profileData])
+        .select()
+        .single();
+
+    if (error) throw new Error(error.message);
     return data;
-  }
-}
+};
 
-module.exports = ProfileService;
+exports.updateProfile = async (id, updatedData) => {
+    const { data, error } = await supabaseClient.client
+        .from('profiles')
+        .update(updatedData)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+
+exports.deleteProfile = async (id) => {
+    const { error } = await supabaseClient.client
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw new Error(error.message);
+};

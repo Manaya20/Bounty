@@ -1,36 +1,42 @@
-const ProfileService = require('../services/profile.service');
+const profileService = require('../services/profile.service');
 
-class ProfileController {
-  static async getMyProfile(req, res, next) {
+exports.getProfile = async (req, res) => {
     try {
-      // For now, just get first profile or handle differently
-      const profile = await ProfileService.getProfile(req.params.id || 'default');
-      res.json(profile);
-    } catch (err) {
-      next(err);
+        const { id } = req.params;
+        const profile = await profileService.getProfile(id);
+        res.status(200).json(profile);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
+};
 
-  static async getProfile(req, res, next) {
+exports.createProfile = async (req, res) => {
     try {
-      const profile = await ProfileService.getProfile(req.params.id);
-      res.json(profile);
-    } catch (err) {
-      next(err);
+        const profileData = req.body;
+        const newProfile = await profileService.createProfile(profileData);
+        res.status(201).json(newProfile);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
+};
 
-  static async updateProfile(req, res, next) {
+exports.updateProfile = async (req, res) => {
     try {
-      const updatedProfile = await ProfileService.updateProfile(
-        req.params.id || 'default',
-        req.body
-      );
-      res.json(updatedProfile);
-    } catch (err) {
-      next(err);
+        const { id } = req.params;
+        const updatedData = req.body;
+        const updatedProfile = await profileService.updateProfile(id, updatedData);
+        res.status(200).json(updatedProfile);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-  }
-}
+};
 
-module.exports = ProfileController;
+exports.deleteProfile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await profileService.deleteProfile(id);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
