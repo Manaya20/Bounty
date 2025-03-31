@@ -1,4 +1,4 @@
-const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
+const supabaseClient = require('../../src/config/SupabaseClient');
 
 exports.getProfile = async (id) => {
     const { data, error } = await supabaseClient.client
@@ -6,6 +6,14 @@ exports.getProfile = async (id) => {
         .select('*')
         .eq('id', id)
         .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+exports.getAllProfiles = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('profiles')
+        .select('*');
 
     if (error) throw new Error(error.message);
     return data;

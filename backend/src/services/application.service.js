@@ -1,4 +1,4 @@
-const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
+const supabaseClient = require('../../src/config/SupabaseClient');
 
 exports.getApplication = async (id) => {
     const { data, error } = await supabaseClient.client

@@ -1,4 +1,4 @@
-const supabaseClient = require('../../src/config/SupabaseClient'); // Singleton instance
+const supabaseClient = require('../../src/config/SupabaseClient');
 
 exports.getTask = async (id) => {
     const { data, error } = await supabaseClient.client
@@ -11,6 +11,14 @@ exports.getTask = async (id) => {
     return data;
 };
 
+exports.getAllTasks = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('tasks')
+        .select('*');
+
+    if (error) throw new Error(error.message);
+    return data;
+};
 exports.createTask = async (taskData) => {
     const { data, error } = await supabaseClient.client
         .from('tasks')

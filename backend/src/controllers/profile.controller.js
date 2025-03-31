@@ -10,6 +10,15 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+exports.getAllProfiles = async (req, res) => {
+    try {
+        const profiles = await profileService.getAllProfiles();
+        res.status(200).json(profiles);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 exports.createProfile = async (req, res) => {
     try {
         const profileData = req.body;
