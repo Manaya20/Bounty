@@ -10,6 +10,14 @@ exports.getAttachment = async (req, res) => {
     }
 };
 
+exports.getAllAttachments = async (req, res) => {
+    try {
+        const attachments = await attachmentService.getAllAttachment();
+        res.status(200).json(attachments);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 exports.createAttachment = async (req, res) => {
     try {
         const attachmentData = req.body;

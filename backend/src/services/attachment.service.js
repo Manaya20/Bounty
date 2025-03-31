@@ -10,6 +10,15 @@ exports.getAttachment = async (id) => {
     if (error) throw new Error(error.message);
     return data;
 };
+exports.getAllAttachment = async () => {
+    const { data, error } = await supabaseClient.client
+        .from('attachments')
+        .select('*');
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+
 
 exports.createAttachment = async (attachmentData) => {
     const { data, error } = await supabaseClient.client
