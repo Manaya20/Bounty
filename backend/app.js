@@ -9,12 +9,10 @@ const authMiddleware = require('./src/middleware/authMiddleware'); // Import aut
 // Create Express app
 const app = express();
 
-// Security middleware
-app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? [process.env.PRODUCTION_URL] 
-    : ['http://localhost:5000']
+    : ['http://localhost:5001']
 }));
 
 // Rate limiting

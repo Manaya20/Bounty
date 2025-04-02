@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const config = {
-  PORT: process.env.PORT || 5000,
+  PORT: process.env.PORT || 5001,
   NODE_ENV: process.env.NODE_ENV || 'development',
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   SUPABASE_URL: process.env.SUPABASE_URL,

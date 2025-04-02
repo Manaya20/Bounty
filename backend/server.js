@@ -3,6 +3,14 @@ const express = require('express');
 const app = require('./app');
 const { PORT, NODE_ENV } = require('./src/config/environment');
 const supabaseClient = require('./src/config/SupabaseClient'); // Singleton instance
+const cors = require('cors');
+
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.PRODUCTION_URL] 
+    : ['http://localhost:5001']
+}));
 
 async function startServer() {
   try {

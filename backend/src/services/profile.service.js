@@ -37,6 +37,24 @@ exports.getProfileByUsername = async (username) => {
     return data[0]; // Return the single profile
 };
 
+exports.getProfileByEmail = async (email) => {
+    const { data, error } = await supabaseClient.client
+        .from('profiles')
+        .select('*')
+        .eq('email', email);
+
+    if (error) throw new Error(error.message);
+
+    // Check if exactly one profile is returned
+    if (!data || data.length === 0) {
+        return null; // No profile found
+    }
+    if (data.length > 1) {
+        throw new Error('Multiple profiles found for the given email');
+    }
+
+    return data[0]; // Return the single profile
+}
 exports.createProfile = async (profileData) => {
     const { data, error } = await supabaseClient.client
         .from('profiles')

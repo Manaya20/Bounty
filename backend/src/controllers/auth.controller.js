@@ -5,11 +5,11 @@ const { generateToken } = require('../utils/jwt.utils');
 // Signup route
 exports.signup = async (req, res) => {
     try {
-        const { username, role, bio, skills, preferences, profile_picture_url, password } = req.body;
+        const { username, role, bio, skills, preferences, profile_picture_url, password, email } = req.body;
 
         // Validate required fields
-        if (!username || !role || !password) {
-            return res.status(400).json({ error: "Username, role, and password are required." });
+        if (!username || !role || !email || !password) {
+            return res.status(400).json({ error: "Username, role, email and password are required." });
         }
 
         // Check if the username already exists
@@ -29,7 +29,8 @@ exports.signup = async (req, res) => {
             skills,
             preferences,
             profile_picture_url,
-            password: hashedPassword
+            password: hashedPassword,
+            email: req.body.email,
         });
 
         res.status(201).json(newProfile);
@@ -63,15 +64,15 @@ exports.me = async (req, res) => {
 // Login route
 exports.login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
         // Validate required fields
-        if (!username || !password) {
-            return res.status(400).json({ error: "Username and password are required." });
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required." });
         }
 
         // Fetch the profile by username
-        const profile = await profileService.getProfileByUsername(username);
+        const profile = await profileService.getProfileByEmail(email);
         if (!profile) {
             return res.status(404).json({ error: "User not found." });
         }

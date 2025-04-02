@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ username: email, password }), // Backend expects `username`, not `email`
+            body: JSON.stringify({ username: email, password }),
         });
 
         if (!response.ok) {
