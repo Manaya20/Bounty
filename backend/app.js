@@ -14,7 +14,7 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? [process.env.PRODUCTION_URL] 
-    : ['http://localhost:3000']
+    : ['http://localhost:5000']
 }));
 
 // Rate limiting

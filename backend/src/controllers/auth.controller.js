@@ -37,7 +37,29 @@ exports.signup = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.me = async (req, res) => {
+    try {
+        // Middleware should have already attached the user to the request
+        const user = req.user;
 
+        if (!user) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        res.status(200).json({
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                avatar: user.profile_picture_url,
+                initials: user.initials,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 // Login route
 exports.login = async (req, res) => {
     try {

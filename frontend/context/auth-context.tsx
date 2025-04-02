@@ -58,123 +58,115 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user is logged in on mount
   useEffect(() => {
-    // In a real app, you would check for a token in localStorage or cookies
-    // and validate it with your backend
     const checkAuth = async () => {
-      try {
-        // Simulate API call to validate token
-        // In a real app, this would be:
-        // const response = await fetch('/api/auth/me', {
-        //   headers: {
-        //     Authorization: `Bearer ${localStorage.getItem('token')}`
-        //   }
-        // });
-        // const data = await response.json();
+        try {
+            const token = localStorage.getItem("bounty_token");
 
-        // For demo purposes, check if we have a token and user data in localStorage
-        const token = localStorage.getItem("bounty_token")
-        const storedUser = localStorage.getItem("bounty_user")
+            if (!token) {
+                throw new Error("No token found");
+            }
 
-        if (token && storedUser) {
-          // Parse the stored user data
-          const userData = JSON.parse(storedUser)
+            // Validate token with backend
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-          // Set the user state
-          setUser({
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            role: userData.role,
-            avatar: userData.avatar,
-            initials: userData.initials,
-          })
+            if (!response.ok) {
+                throw new Error("Invalid or expired token");
+            }
+
+            const data = await response.json();
+
+            // Set user state
+            setUser(data.user);
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            setUser(null);
+
+            // Clear any invalid data
+            localStorage.removeItem("bounty_token");
+            localStorage.removeItem("bounty_user");
+        } finally {
+            setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Auth check failed:", error)
-        setUser(null)
-        // Clear any invalid data
-        localStorage.removeItem("bounty_token")
-        localStorage.removeItem("bounty_user")
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    };
 
-    checkAuth()
-  }, [])
+    checkAuth();
+}, []);
 
   // Login function
   const login = async (email: string, password: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // In a real app, this would be:
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
-      // });
-      // const data = await response.json();
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username: email, password }), // Backend expects `username`, not `email`
+        });
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Login failed");
+        }
 
-      // Check if the email exists in our mock data
-      const mockUser = MOCK_USERS[email as keyof typeof MOCK_USERS]
+        const data = await response.json();
+        const { user, token } = data;
 
-      if (!mockUser || mockUser.password !== password) {
-        throw new Error("Invalid email or password")
-      }
+        // Store token in localStorage
+        localStorage.setItem("bounty_token", token);
 
-      // Create a user object without the password
-      const { password: _, ...userWithoutPassword } = mockUser
+        // Store user data in localStorage
+        localStorage.setItem("bounty_user", JSON.stringify(user));
 
-      // Store token and user data
-      localStorage.setItem("bounty_token", "mock_token_" + Date.now())
-      localStorage.setItem("bounty_user", JSON.stringify(userWithoutPassword))
+        // Set user state
+        setUser(user);
 
-      // Set user state
-      setUser(userWithoutPassword)
-
-      // Redirect to dashboard
-      router.push("/dashboard")
+        // Redirect to dashboard
+        router.push("/dashboard");
     } catch (error) {
-      console.error("Login failed:", error)
-      throw new Error("Login failed. Please check your credentials and try again.")
+        console.error("Login failed:", error);
+        throw new Error("Login failed. Please check your credentials and try again.");
     } finally {
-      setIsLoading(false)
+        setIsLoading(false);
     }
   }
 
   // Register function
   const register = async (email: string, password: string, username: string, role: UserRole) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // In a real app, this would be:
-      // const response = await fetch('/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password, username, role }),
-      // });
-      // const data = await response.json();
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/signup`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username,
+                email,
+                password,
+                role,
+            }),
+        });
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Registration failed");
+        }
 
-      // Check if email already exists
-      if (MOCK_USERS[email as keyof typeof MOCK_USERS]) {
-        throw new Error("Email already in use")
-      }
+        const data = await response.json();
 
-      // In a real app, the user would be created in the database
-      // For our mock implementation, we'll just redirect to login
-
-      // Redirect to login page
-      router.push("/login?registered=true")
+        // Optionally, redirect to the login page after successful registration
+        router.push("/login?registered=true");
     } catch (error) {
-      console.error("Registration failed:", error)
-      throw new Error("Registration failed. Please try again.")
+        console.error("Registration failed:", error);
+        throw new Error("Registration failed. Please try again.");
     } finally {
-      setIsLoading(false)
+        setIsLoading(false);
     }
   }
 
