@@ -57,118 +57,121 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   // Check if user is logged in on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-        try {
-            const token = localStorage.getItem("bounty_token");
+useEffect(() => {
+  const checkAuth = async () => {
+    try {
+      const token = localStorage.getItem("bounty_token");
 
-            if (!token) {
-                throw new Error("No token found");
-            }
+      if (!token) {
+        // If no token exists, set user to null and exit
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
 
-            // Validate token with backend
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+      // Validate token with backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-            if (!response.ok) {
-                throw new Error("Invalid or expired token");
-            }
+      if (!response.ok) {
+        throw new Error("Invalid or expired token");
+      }
 
-            const data = await response.json();
+      const data = await response.json();
 
-            // Set user state
-            setUser(data.user);
-        } catch (error) {
-            console.error("Auth check failed:", error);
-            setUser(null);
+      // Set user state
+      setUser(data.user);
+    } catch (error) {
+      console.error("Auth check failed:", error);
 
-            // Clear any invalid data
-            localStorage.removeItem("bounty_token");
-            localStorage.removeItem("bounty_user");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      // Clear any invalid data
+      localStorage.removeItem("bounty_token");
+      localStorage.removeItem("bounty_user");
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    checkAuth();
+  checkAuth();
 }, []);
 
   // Login function
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username: email, password }),
-        });
+const login = async (email: string, password: string) => {
+  setIsLoading(true);
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }), // Use `email` instead of `username`
+    });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Login failed");
-        }
-
-        const data = await response.json();
-        const { user, token } = data;
-
-        // Store token in localStorage
-        localStorage.setItem("bounty_token", token);
-
-        // Store user data in localStorage
-        localStorage.setItem("bounty_user", JSON.stringify(user));
-
-        // Set user state
-        setUser(user);
-
-        // Redirect to dashboard
-        router.push("/dashboard");
-    } catch (error) {
-        console.error("Login failed:", error);
-        throw new Error("Login failed. Please check your credentials and try again.");
-    } finally {
-        setIsLoading(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Login failed");
     }
+
+    const data = await response.json();
+    const { user, token } = data;
+
+    // Store token in localStorage
+    localStorage.setItem("bounty_token", token);
+
+    // Store user data in localStorage
+    localStorage.setItem("bounty_user", JSON.stringify(user));
+
+    // Set user state
+    setUser(user);
+
+    // Redirect to dashboard
+    router.push("/dashboard");
+  } catch (error) {
+    console.error("Login failed:", error);
+    throw new Error("Login failed. Please check your credentials and try again.");
+  } finally {
+    setIsLoading(false);
   }
+};
 
   // Register function
-  const register = async (email: string, password: string, username: string, role: UserRole) => {
-    setIsLoading(true);
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/signup`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                username,
-                email,
-                password,
-                role,
-            }),
-        });
+const register = async (email: string, password: string, username: string, role: UserRole) => {
+  setIsLoading(true);
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        role,
+      }),
+    });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Registration failed");
-        }
-
-        const data = await response.json();
-
-        // Optionally, redirect to the login page after successful registration
-        router.push("/login?registered=true");
-    } catch (error) {
-        console.error("Registration failed:", error);
-        throw new Error("Registration failed. Please try again.");
-    } finally {
-        setIsLoading(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Registration failed");
     }
+
+    const data = await response.json();
+
+    // Optionally, redirect to the login page after successful registration
+    router.push("/login?registered=true");
+  } catch (error) {
+    console.error("Registration failed:", error);
+    throw new Error("Registration failed. Please try again.");
+  } finally {
+    setIsLoading(false);
   }
+};
 
   // Logout function
   const logout = () => {
