@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
-import { PaperclipIcon, Plus, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { PaperclipIcon, Plus, Trash2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [skills, setSkills] = useState<string[]>(["Web Design", "UI/UX", "React", "Next.js", "Tailwind CSS"]);
   const [newSkill, setNewSkill] = useState("");
-  
+
   const addSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
       setSkills([...skills, newSkill.trim()]);
       setNewSkill("");
     }
   };
-  
+
   const removeSkill = (skillToRemove: string) => {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
-  
+
   const handleSaveProfile = () => {
     setIsSubmitting(true);
-    
+
     // This is where you would make an API call to update the profile
     // Example:
     // await fetch('/api/profile', {
@@ -39,7 +39,7 @@ export default function ProfilePage() {
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify({ skills, ... }),
     // });
-    
+
     // Simulate API call
     setTimeout(() => {
       toast({
@@ -49,7 +49,7 @@ export default function ProfilePage() {
       setIsSubmitting(false);
     }, 1500);
   };
-  
+
   return (
     <DashboardLayout>
       <div className="container px-4 mx-auto">
@@ -60,8 +60,11 @@ export default function ProfilePage() {
               Manage your profile and settings
             </p>
           </div>
+          <Button onClick={handleSaveProfile} variant="default" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Profile"}
+          </Button>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-1 space-y-6">
             <Card>
@@ -97,7 +100,7 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Account Info</CardTitle>
@@ -126,7 +129,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="md:col-span-2 space-y-6">
             <Tabs defaultValue="profile">
               <TabsList className="grid w-full grid-cols-3">
@@ -134,7 +137,7 @@ export default function ProfilePage() {
                 <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                 <TabsTrigger value="reviews">Reviews</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="profile" className="mt-6 space-y-6">
                 <Card>
                   <CardHeader>
@@ -167,7 +170,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="space-y-2 sm:col-span-2">
                         <label className="text-sm font-medium">Bio</label>
-                        <Textarea 
+                        <Textarea
                           defaultValue="I'm a passionate web developer with over 5 years of experience in creating responsive, user-friendly websites and applications. Specialized in React, Next.js, and modern frontend technologies."
                           className="min-h-[100px]"
                         />
@@ -175,7 +178,7 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Skills</CardTitle>
@@ -186,8 +189,8 @@ export default function ProfilePage() {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex gap-2">
-                        <Input 
-                          placeholder="Add a skill..." 
+                        <Input
+                          placeholder="Add a skill..."
                           value={newSkill}
                           onChange={(e) => setNewSkill(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
@@ -200,9 +203,9 @@ export default function ProfilePage() {
                         {skills.map((skill) => (
                           <div key={skill} className="flex items-center bg-primary/10 text-primary rounded-md px-2 py-1">
                             <span className="text-sm">{skill}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-5 w-5 ml-1 text-primary hover:text-primary/80"
                               onClick={() => removeSkill(skill)}
                             >
@@ -214,7 +217,7 @@ export default function ProfilePage() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Experience</CardTitle>
@@ -231,81 +234,30 @@ export default function ProfilePage() {
                             <p className="text-sm text-muted-foreground">TechCorp Inc.</p>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M12 20h9" />
-                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                              </svg>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M3 6h18" />
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                              </svg>
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground mb-2">Jan 2021 - Present</div>
-                        <p className="text-sm">Led frontend development for multiple web applications, focusing on performance optimization and responsive design.</p>
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-medium">Web Developer</h3>
-                            <p className="text-sm text-muted-foreground">Digital Solutions LLC</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M12 20h9" />
-                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                              </svg>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M3 6h18" />
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2\
+                            <Button variant="outline" size="sm">Edit</Button>
+                            <Button variant="ghost" size="sm">Delete</Button> 
+                            </div> 
+                            </div> 
+                            <p className="text-sm text-muted-foreground"> 
+                              Developed and maintained responsive web applications using React, 
+                              improving page load performance by 30%. 
+                              </p> 
+                              </div> {/* Additional experience entries can be added dynamically */} 
+                              </div> 
+                              </CardContent> 
+                              </Card> 
+                              </TabsContent>
+                                        <TabsContent value="portfolio" className="mt-6">
+            <p className="text-muted-foreground">Portfolio section coming soon...</p>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="mt-6">
+            <p className="text-muted-foreground">Reviews section coming soon...</p>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+); }
 
