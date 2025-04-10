@@ -1,0 +1,30 @@
+{
+    "AWSEBDockerrunVersion": 2,
+    "containerDefinitions": [
+      {
+        "name": "frontend",
+        "image": "frontend",
+        "essential": true,
+        "memory": 512,
+        "portMappings": [
+          {
+            "hostPort": 80,
+            "containerPort": 3000
+          }
+        ]
+      },
+      {
+        "name": "backend",
+        "image": "backend",
+        "essential": false,
+        "memory": 512,
+        "portMappings": [
+          {
+            "hostPort": 5001,
+            "containerPort": 5001
+          }
+        ]
+      }
+    ]
+  }
+  
