@@ -35,7 +35,9 @@ jobs:
 
       # Zip the backend app for EB
       - name: Zip backend app for EB
-        run: zip -r app.zip ./backend . -x "*.git*" "node_modules/*" ".github/*"
+  run: |
+    cd backend
+    zip -r ../app.zip . -x "*.git*" "node_modules/*" ".github/*"
 
       # Deploy to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
