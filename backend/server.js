@@ -4,7 +4,7 @@ const app = require("./app");
 const { PORT, NODE_ENV } = require("./src/config/environment");
 const supabaseClient = require("./src/config/SupabaseClient"); // Singleton instance
 const cors = require("cors");
-
+//trial changefor deployment
 app.use(
   cors({
     origin:
