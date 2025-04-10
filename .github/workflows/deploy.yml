@@ -27,17 +27,13 @@ jobs:
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm install
+
       # Build frontend (if needed)
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
 
-      # Build backend (if needed)
-      - name: Build backend
-        working-directory: ./backend
-        run: npm run build
-
-      # Zip the app for Elastic Beanstalk deployment
+      # Zip the app for EB
       - name: Zip app for EB
         run: zip -r app.zip . -x "*.git*" "node_modules/*" ".github/*"
 
