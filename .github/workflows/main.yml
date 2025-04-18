@@ -7,62 +7,113 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  security-scan:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        
-    - name: Install Backend Dependencies
-      run: |
-        cd backend
-        npm install
-        
-    - name: Run Backend Tests
-      run: |
-        cd backend
-        npm test
-        
-    - name: Install Frontend Dependencies
-      run: |
-        cd frontend
-        npm install --legacy-peer-deps
-        
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run OWASP ZAP Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'https://your-application-url'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+  build-and-test:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm install
+          
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          npm test
+          
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+          
+      - name: Run SonarQube Analysis
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-        
-    - name: Deploy Infrastructure
-      run: |
-        cd terraform
-        terraform init
-        terraform plan
-        terraform apply -auto-approve
-        
-    - name: Deploy Backend
-      run: |
-        cd backend
-        npm run build
-        aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/backend/
-        
-    - name: Deploy Frontend
-      run: |
-        cd frontend
-        npm run build
-        aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/frontend/ 
+      - uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Deploy Infrastructure
+        run: |
+          cd terraform
+          terraform init
+          terraform plan
+          terraform apply -auto-approve
+          
+      - name: Deploy Backend
+        run: |
+          cd backend
+          npm run build
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/backend/
+          
+      - name: Deploy Frontend
+        run: |
+          cd frontend
+          npm run build
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/frontend/
+
+  monitoring-setup:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Prometheus
+        run: |
+          # Install Prometheus
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm install prometheus prometheus-community/prometheus
+          
+      - name: Setup Grafana
+        run: |
+          # Install Grafana
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm install grafana grafana/grafana
+          
+      - name: Setup ELK Stack
+        run: |
+          # Install ELK Stack
+          helm repo add elastic https://helm.elastic.co
+          helm install elasticsearch elastic/elasticsearch
+          helm install kibana elastic/kibana
+          helm install logstash elastic/logstash 

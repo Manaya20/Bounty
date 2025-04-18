@@ -5,14 +5,18 @@ global:
 scrape_configs:
   - job_name: 'bounty-backend'
     static_configs:
-      - targets: ['host.docker.internal:3000']
-    metrics_path: '/metrics'
-    
-  - job_name: 'bounty-frontend'
-    static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['bounty-backend:3000']
     metrics_path: '/metrics'
     
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['node-exporter:9100'] 
+      - targets: ['node-exporter:9100']
+      
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+    
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090'] 
