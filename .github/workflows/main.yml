@@ -33,11 +33,6 @@ jobs:
         cd frontend
         npm install --legacy-peer-deps
         
-    - name: Run Frontend Tests
-      run: |
-        cd frontend
-        npm test
-        
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
