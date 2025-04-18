@@ -1,29 +1,37 @@
 {
-  "name": "backend",
+  "name": "bounty-backend",
   "version": "1.0.0",
-  "description": "Backend for the project",
-  "main": "server.js",
+  "description": "Backend for Bounty application",
+  "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "test": "jest",
+    "test:integration": "jest --config jest.integration.config.js",
+    "lint": "eslint . --ext .js,.ts",
+    "format": "prettier --write \"src/**/*.{js,ts}\""
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.2",
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^1.20.2",
-    "compression": "^1.8.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.0",
-    "helmet": "^7.2.0",
-    "jsonwebtoken": "^9.0.0",
-    "morgan": "^1.10.0",
-    "pino": "^9.6.0",
-    "pino-pretty": "^13.0.0"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint": "^8.37.0",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.7",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
   },
   "engines": {
     "node": ">=16.0.0"
