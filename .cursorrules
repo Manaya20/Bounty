@@ -1,0 +1,19 @@
+3.2 CI/CD Pipeline Implementation
+CI/CD Tool Used: [GitHub Actions]
+Pipeline Workflow: [Describe the stages – Build, Test, Deploy]
+Automated Tests: [Unit Tests, Integration Tests, Security Scans]
+3.3 Infrastructure as Code (IaC)
+Tools Used: [Terraform]
+Deployment Environment: [AWS]
+Infrastructure Configuration: [Describe setup]
+3.4 Monitoring & Logging
+Monitoring Tools: [Prometheus, Grafana, ELK]
+Logging Setup: [Centralized  Logging, Logstash, Fluentd]
+Security & DevSecOps
+Security Tools Used: [SonarQube, OWASP ZAP, Trivy]
+Compliance Checks: [Explain security policies followed]
+
+
+
+for this project of Bounty, give the above Implementation's step wise 
+we need the frontend and backend to be deployed 

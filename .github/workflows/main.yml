@@ -1,0 +1,73 @@
+name: Bounty CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm install
+        
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        npm test
+        
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm install
+        
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm test
+        
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        
+    - name: Deploy Infrastructure
+      run: |
+        cd terraform
+        terraform init
+        terraform plan
+        terraform apply -auto-approve
+        
+    - name: Deploy Backend
+      run: |
+        cd backend
+        npm run build
+        aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/backend/
+        
+    - name: Deploy Frontend
+      run: |
+        cd frontend
+        npm run build
+        aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/frontend/ 
