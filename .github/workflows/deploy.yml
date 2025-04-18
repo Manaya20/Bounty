@@ -3,7 +3,7 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches:
-      - main # Or the branch you deploy from
+      - main
 
 jobs:
   deploy:
@@ -16,28 +16,41 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20" # Or the version you need
+          node-version: "18" # Match your local Node.js version
 
-      # Install frontend dependencies
+      # Install and build frontend
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
 
       # Install backend dependencies
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm install
 
-      # Build frontend
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      # Zip the backend app for Elastic Beanstalk
-      - name: Zip backend app for EB
+      # Create deployment package
+      - name: Create deployment package
         run: |
-          cd backend
+          # Create a temporary directory
+          mkdir -p deploy
+          
+          # Copy backend files
+          cp -r backend/* deploy/
+          rm -rf deploy/node_modules
+          
+          # Copy frontend build
+          mkdir -p deploy/public
+          cp -r frontend/.next deploy/public/
+          cp -r frontend/public/* deploy/public/
+          
+          # Create zip file
+          cd deploy
           zip -r ../app.zip . -x "*.git*" "node_modules/*" ".github/*"
+          cd ..
 
       # Deploy to Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
