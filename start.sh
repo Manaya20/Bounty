@@ -28,4 +28,4 @@ pm2 startup
 
 # Keep the script running and show logs
 echo "Starting PM2 logs..."
-pm2 logs 
+pm2 logs
