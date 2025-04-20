@@ -55,9 +55,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install
+        
       - name: Create ZIP package
         run: |
-          zip -r app.zip . -x "*.git*" "node_modules/*" ".github/*"
+          zip -r app.zip . -x "*.git*" "node_modules/*" ".github/*" "backend/*" "frontend/*"
           
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
