@@ -27,6 +27,7 @@ async function startServer() {
     
     // Test Supabase connection
     const isConnected = await supabaseClient.checkConnection();
+
     if (!isConnected) {
       throw new Error('Failed to connect to Supabase');
     }

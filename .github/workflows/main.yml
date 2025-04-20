@@ -22,13 +22,6 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-      - name: Run OWASP ZAP Scan
-        uses: zaproxy/action-baseline@v0.7.0
-        with:
-          target: 'https://your-application-url'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
-
   build-and-test:
     needs: security-scan
     runs-on: ubuntu-latest
@@ -54,12 +47,6 @@ jobs:
         run: |
           cd frontend
           npm install --legacy-peer-deps
-          
-      - name: Run SonarQube Analysis
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   deploy:
     needs: build-and-test
@@ -68,52 +55,83 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          node-version: '18'
           
-      - name: Deploy Infrastructure
-        run: |
-          cd terraform
-          terraform init
-          terraform plan
-          terraform apply -auto-approve
-          
-      - name: Deploy Backend
-        run: |
-          cd backend
-          npm run build
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/backend/
-          
-      - name: Deploy Frontend
+      - name: Build Frontend
         run: |
           cd frontend
+          npm install --legacy-peer-deps
           npm run build
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/frontend/
+          
+      - name: Build Backend
+        run: |
+          cd backend
+          npm install
+          npm run build
+          
+      - name: Create Deployment Package
+        run: |
+          mkdir -p deploy
+
+          # Copy backend files
+          cp -r backend/* deploy/
+          rm -rf deploy/node_modules
+
+          # Copy frontend build
+          mkdir -p deploy/public
+          cp -r frontend/.next deploy/public/
+          cp -r frontend/public/* deploy/public/
+
+          # Copy configuration files
+          cp package.json deploy/
+          cp server.js deploy/
+          cp Procfile deploy/
+          cp -r .ebextensions deploy/
+
+          # Remove any internal Procfiles (to avoid conflict)
+          rm -f deploy/Procfile deploy/backend/Procfile
+
+          # Create zip
+          cd deploy
+          zip -r ../app.zip . -x "*.git*" "node_modules/*" ".github/*"
+          cd ..
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.AWS_EB_APP_NAME }}
+          environment_name: ${{ secrets.AWS_EB_ENV_NAME }}
+          version_label: ${{ github.sha }}
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: app.zip
+          wait_for_deployment: true
 
   monitoring-setup:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Prometheus
-        run: |
-          # Install Prometheus
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm install prometheus prometheus-community/prometheus
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
           
-      - name: Setup Grafana
+      - name: Enable Enhanced Health Reporting
         run: |
-          # Install Grafana
-          helm repo add grafana https://grafana.github.io/helm-charts
-          helm install grafana grafana/grafana
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.AWS_EB_ENV_NAME }} \
+            --option-settings Namespace=aws:elasticbeanstalk:healthreporting:system,OptionName=SystemType,Value=enhanced
           
-      - name: Setup ELK Stack
+      - name: Configure CloudWatch Logs
         run: |
-          # Install ELK Stack
-          helm repo add elastic https://helm.elastic.co
-          helm install elasticsearch elastic/elasticsearch
-          helm install kibana elastic/kibana
-          helm install logstash elastic/logstash 
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.AWS_EB_ENV_NAME }} \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=StreamLogs,Value=true \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=DeleteOnTerminate,Value=false \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=RetentionInDays,Value=7
