@@ -60,12 +60,39 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install dependencies
-        run: npm install
-        
-      - name: Create ZIP package
+      - name: Build Frontend
         run: |
-          zip -r app.zip . -x "*.git*" "node_modules/*" ".github/*" "backend/*" "frontend/*"
+          cd frontend
+          npm install --legacy-peer-deps
+          npm run build
+          
+      - name: Build Backend
+        run: |
+          cd backend
+          npm install
+          npm run build
+          
+      - name: Create Deployment Package
+        run: |
+          # Create a temporary directory for deployment
+          mkdir -p deploy
+          
+          # Copy backend files
+          cp -r backend/* deploy/
+          rm -rf deploy/node_modules
+          
+          # Copy frontend build
+          mkdir -p deploy/public
+          cp -r frontend/build/* deploy/public/
+          
+          # Copy package.json and server.js
+          cp package.json deploy/
+          cp server.js deploy/
+          
+          # Create zip file
+          cd deploy
+          zip -r ../app.zip . -x "*.git*" "node_modules/*" ".github/*"
+          cd ..
           
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
@@ -83,19 +110,23 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Prometheus
-        run: |
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm install prometheus prometheus-community/prometheus
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
           
-      - name: Setup Grafana
+      - name: Enable Enhanced Health Reporting
         run: |
-          helm repo add grafana https://grafana.github.io/helm-charts
-          helm install grafana grafana/grafana
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.AWS_EB_ENV_NAME }} \
+            --option-settings Namespace=aws:elasticbeanstalk:healthreporting:system,OptionName=SystemType,Value=enhanced
           
-      - name: Setup ELK Stack
+      - name: Configure CloudWatch Logs
         run: |
-          helm repo add elastic https://helm.elastic.co
-          helm install elasticsearch elastic/elasticsearch
-          helm install kibana elastic/kibana
-          helm install logstash elastic/logstash
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.AWS_EB_ENV_NAME }} \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=StreamLogs,Value=true \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=DeleteOnTerminate,Value=false \
+            --option-settings Namespace=aws:elasticbeanstalk:cloudwatch:logs,OptionName=RetentionInDays,Value=7

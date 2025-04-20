@@ -5,17 +5,30 @@ const app = express();
 // Use the port provided by Elastic Beanstalk or default to 8081
 const port = process.env.PORT || 8081;
 
-// Serve static files from the 'public' directory
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the frontend build
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Basic health check endpoint
+// API routes
+app.use('/api', require('./routes/api'));
+
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.send('Bounty Application is running');
+// Serve index.html for all other routes (SPA support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
 
 // Start server
