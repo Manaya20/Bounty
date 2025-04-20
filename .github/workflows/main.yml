@@ -22,12 +22,12 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-      - name: Run OWASP ZAP Scan
-        uses: zaproxy/action-baseline@v0.7.0
-        with:
-          target: 'https://your-application-url'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'
+      # - name: Run OWASP ZAP Scan
+      #   uses: zaproxy/action-baseline@v0.7.0
+      #   with:
+      #     target: 'https://your-application-url'
+      #     rules_file_name: '.zap/rules.tsv'
+      #     cmd_options: '-a'
 
   build-and-test:
     needs: security-scan
