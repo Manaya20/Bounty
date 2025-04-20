@@ -83,7 +83,8 @@ jobs:
           
           # Copy frontend build
           mkdir -p deploy/public
-          cp -r frontend/build/* deploy/public/
+          cp -r frontend/.next deploy/public/
+          cp -r frontend/public/* deploy/public/
           
           # Copy package.json and server.js
           cp package.json deploy/

@@ -20,6 +20,11 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy' });
 });
 
+// Serve Next.js static files
+app.get('/_next/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', req.path));
+});
+
 // Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
