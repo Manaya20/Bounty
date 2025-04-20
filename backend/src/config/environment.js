@@ -5,12 +5,12 @@ const config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   SUPABASE_URL: process.env.SUPABASE_URL,
-  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+  SUPABASE_KEY: process.env.SUPABASE_KEY,
   JWT_SECRET: process.env.JWT_SECRET || 'your-fallback-secret'
 };
 
 // Validate required environment variables
-const requiredVariables = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+const requiredVariables = ['SUPABASE_URL', 'SUPABASE_KEY'];
 const missingVariables = requiredVariables.filter((key) => !config[key]);
 
 if (missingVariables.length > 0) {
