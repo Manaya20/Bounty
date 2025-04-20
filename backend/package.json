@@ -2,11 +2,13 @@
   "name": "bounty-backend",
   "version": "1.0.0",
   "description": "Backend for Bounty application",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "preinstall": "npm install -g typescript",
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
+    "postinstall": "npm run build",
     "test": "jest --passWithNoTests",
     "test:integration": "jest --config jest.integration.config.js --passWithNoTests",
     "lint": "eslint . --ext .js,.ts",
@@ -34,7 +36,7 @@
     "typescript": "^5.0.3"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "keywords": [],
   "author": "",
