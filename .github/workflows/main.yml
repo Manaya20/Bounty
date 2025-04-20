@@ -22,13 +22,6 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-      # - name: Run OWASP ZAP Scan
-      #   uses: zaproxy/action-baseline@v0.7.0
-      #   with:
-      #     target: 'https://your-application-url'
-      #     rules_file_name: '.zap/rules.tsv'
-      #     cmd_options: '-a'
-
   build-and-test:
     needs: security-scan
     runs-on: ubuntu-latest
@@ -54,12 +47,6 @@ jobs:
         run: |
           cd frontend
           npm install --legacy-peer-deps
-          
-      # - name: Run SonarQube Analysis
-      #   uses: sonarsource/sonarqube-scan-action@master
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   deploy:
     needs: build-and-test
@@ -68,28 +55,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          role-duration-seconds: 1200
-          role-session-name: GitHubActionsSession
-          
-      - name: Verify AWS credentials
+      - name: Create ZIP package
         run: |
-          aws sts get-caller-identity
+          zip -r app.zip . -x "*.git*" "node_modules/*" ".github/*"
           
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: ${{ secrets.AWS_EB_APP_NAME }}
           environment_name: ${{ secrets.AWS_EB_ENV_NAME }}
           version_label: ${{ github.sha }}
           region: ${{ secrets.AWS_REGION }}
+          deployment_package: app.zip
           wait_for_deployment: true
-          deployment_bucket: ${{ secrets.AWS_EB_BUCKET_NAME }}
 
   monitoring-setup:
     needs: deploy
@@ -97,20 +77,17 @@ jobs:
     steps:
       - name: Setup Prometheus
         run: |
-          # Install Prometheus
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm install prometheus prometheus-community/prometheus
           
       - name: Setup Grafana
         run: |
-          # Install Grafana
           helm repo add grafana https://grafana.github.io/helm-charts
           helm install grafana grafana/grafana
           
       - name: Setup ELK Stack
         run: |
-          # Install ELK Stack
           helm repo add elastic https://helm.elastic.co
           helm install elasticsearch elastic/elasticsearch
           helm install kibana elastic/kibana
-          helm install logstash elastic/logstash 
+          helm install logstash elastic/logstash
