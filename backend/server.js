@@ -1,33 +1,66 @@
 require("dotenv").config();
-const express = require("express");
 const app = require("./app");
 const { PORT, NODE_ENV } = require("./src/config/environment");
-const supabaseClient = require("./src/config/SupabaseClient"); // Singleton instance
-const cors = require("cors");
-//trial changefor deployment
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? [process.env.PRODUCTION_URL]
-        : ["http://localhost:5001"],
-  })
-);
+const supabaseClient = require("./src/config/SupabaseClient");
+const morgan = require('morgan');
+
+// Add request logging middleware
+app.use(morgan('dev'));
+
+// Add error handling for uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Add error handling for unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+  process.exit(1);
+});
 
 async function startServer() {
   try {
+    console.log('🚀 Starting server...');
+    console.log(`📡 Environment: ${NODE_ENV}`);
+    console.log(`🔌 Port: ${PORT}`);
+    
+    // Test Supabase connection
     const isConnected = await supabaseClient.checkConnection();
-
     if (!isConnected) {
-      console.error("🚨 Failed to connect to Supabase");
-      process.exit(1);
+      throw new Error('Failed to connect to Supabase');
     }
+    console.log('✅ Connected to Supabase');
 
-    app.listen(PORT, () => {
+    // Start the server with port fallback
+    const server = app.listen(PORT, () => {
       console.log(`✅ Server running in ${NODE_ENV} mode on port ${PORT}`);
+      console.log(`🌐 Health check available at: http://localhost:${PORT}/health`);
+      console.log(`🔑 Auth endpoints:`);
+      console.log(`   - POST http://localhost:${PORT}/api/v1/auth/signup`);
+      console.log(`   - POST http://localhost:${PORT}/api/v1/auth/login`);
+      console.log(`   - GET  http://localhost:${PORT}/api/v1/auth/me`);
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Trying alternative port...`);
+        // Try alternative port
+        const altPort = PORT + 1;
+        app.listen(altPort, () => {
+          console.log(`✅ Server running in ${NODE_ENV} mode on port ${altPort}`);
+          console.log(`🌐 Health check available at: http://localhost:${altPort}/health`);
+          console.log(`🔑 Auth endpoints:`);
+          console.log(`   - POST http://localhost:${altPort}/api/v1/auth/signup`);
+          console.log(`   - POST http://localhost:${altPort}/api/v1/auth/login`);
+          console.log(`   - GET  http://localhost:${altPort}/api/v1/auth/me`);
+        });
+      } else {
+        console.error('❌ Server error:', err);
+        process.exit(1);
+      }
     });
+
   } catch (error) {
-    console.error("💥 Server startup error:", error.message);
+    console.error('💥 Server startup error:', error.message);
     process.exit(1);
   }
 }

@@ -109,16 +109,20 @@ const login = async (email: string, password: string) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }), // Use `email` instead of `username`
+      body: JSON.stringify({ email, password }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Login failed");
+      throw new Error(data.message || data.error || "Login failed");
     }
 
-    const data = await response.json();
     const { user, token } = data;
+
+    if (!token) {
+      throw new Error("No token received from server");
+    }
 
     // Store token in localStorage
     localStorage.setItem("bounty_token", token);
@@ -127,13 +131,19 @@ const login = async (email: string, password: string) => {
     localStorage.setItem("bounty_user", JSON.stringify(user));
 
     // Set user state
-    setUser(user);
+    setUser({
+      id: user.id,
+      name: user.username,
+      email: user.email,
+      role: user.role,
+      initials: user.username.substring(0, 2).toUpperCase(),
+    });
 
     // Redirect to dashboard
     router.push("/dashboard");
   } catch (error) {
     console.error("Login failed:", error);
-    throw new Error("Login failed. Please check your credentials and try again.");
+    throw new Error(error instanceof Error ? error.message : "Login failed. Please check your credentials and try again.");
   } finally {
     setIsLoading(false);
   }
@@ -156,18 +166,19 @@ const register = async (email: string, password: string, username: string, role:
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Registration failed");
-    }
-
     const data = await response.json();
 
-    // Optionally, redirect to the login page after successful registration
+    if (!response.ok) {
+      throw new Error(data.error || "Registration failed");
+    }
+
+    console.log("Registration successful:", data);
+
+    // Redirect to login page with success message
     router.push("/login?registered=true");
   } catch (error) {
     console.error("Registration failed:", error);
-    throw new Error("Registration failed. Please try again.");
+    throw new Error(error instanceof Error ? error.message : "Registration failed. Please try again.");
   } finally {
     setIsLoading(false);
   }

@@ -1,52 +1,78 @@
-const supabaseClient = require('../../src/config/SupabaseClient');
+const supabaseClient = require('../config/SupabaseClient').getInstance();
 
 exports.getTask = async (id) => {
-    const { data, error } = await supabaseClient.client
-        .from('tasks')
-        .select('*')
-        .eq('id', id)
-        .single();
+    try {
+        const { data, error } = await supabaseClient
+            .from('tasks')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-    if (error) throw new Error(error.message);
-    return data;
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error in getTask:', error);
+        throw error;
+    }
 };
 
 exports.getAllTasks = async () => {
-    const { data, error } = await supabaseClient.client
-        .from('tasks')
-        .select('*');
+    try {
+        const { data, error } = await supabaseClient
+            .from('tasks')
+            .select('*');
 
-    if (error) throw new Error(error.message);
-    return data;
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error in getAllTasks:', error);
+        throw error;
+    }
 };
-exports.createTask = async (taskData) => {
-    const { data, error } = await supabaseClient.client
-        .from('tasks')
-        .insert([taskData])
-        .select()
-        .single();
 
-    if (error) throw new Error(error.message);
-    return data;
+exports.createTask = async (taskData) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from('tasks')
+            .insert([taskData])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error in createTask:', error);
+        throw error;
+    }
 };
 
 exports.updateTask = async (id, updatedData) => {
-    const { data, error } = await supabaseClient.client
-        .from('tasks')
-        .update(updatedData)
-        .eq('id', id)
-        .select()
-        .single();
+    try {
+        const { data, error } = await supabaseClient
+            .from('tasks')
+            .update(updatedData)
+            .eq('id', id)
+            .select()
+            .single();
 
-    if (error) throw new Error(error.message);
-    return data;
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error('Error in updateTask:', error);
+        throw error;
+    }
 };
 
 exports.deleteTask = async (id) => {
-    const { error } = await supabaseClient.client
-        .from('tasks')
-        .delete()
-        .eq('id', id);
+    try {
+        const { error } = await supabaseClient
+            .from('tasks')
+            .delete()
+            .eq('id', id);
 
-    if (error) throw new Error(error.message);
+        if (error) throw error;
+    } catch (error) {
+        console.error('Error in deleteTask:', error);
+        throw error;
+    }
 };

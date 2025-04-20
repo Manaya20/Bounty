@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -23,13 +23,25 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>('');
+  const [error, setError] = useState<string | null>(null);
 
-  const { login } = useAuth(); // Use the login function from AuthContext
+  const { login } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
+
+  // Handle registration success toast
+  useEffect(() => {
+    if (registered) {
+      toast({
+        title: 'Registration successful!',
+        description: 'Please log in with your new account.',
+      });
+      // Clear the query parameter
+      router.replace('/login');
+    }
+  }, [registered, router, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,27 +49,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Use the login utility function
       await login(email, password);
-
-      // Redirect to dashboard after successful login
-      router.push('/dashboard');
+      // No need to redirect here as the login function handles it
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Show toast if user just registered
-  if (registered && !isLoading) {
-    toast({
-      title: 'Registration successful!',
-      description: 'Please log in with your new account.',
-    });
-    // Clear the query parameter
-    router.replace('/login');
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
