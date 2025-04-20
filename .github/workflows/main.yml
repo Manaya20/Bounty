@@ -74,29 +74,31 @@ jobs:
           
       - name: Create Deployment Package
         run: |
-          # Create a temporary directory for deployment
           mkdir -p deploy
-          
+
           # Copy backend files
           cp -r backend/* deploy/
           rm -rf deploy/node_modules
-          
+
           # Copy frontend build
           mkdir -p deploy/public
           cp -r frontend/.next deploy/public/
           cp -r frontend/public/* deploy/public/
-          
+
           # Copy configuration files
           cp package.json deploy/
           cp server.js deploy/
           cp Procfile deploy/
           cp -r .ebextensions deploy/
-          
-          # Create zip file
+
+          # Remove any internal Procfiles (to avoid conflict)
+          rm -f deploy/Procfile deploy/backend/Procfile
+
+          # Create zip
           cd deploy
           zip -r ../app.zip . -x "*.git*" "node_modules/*" ".github/*"
           cd ..
-          
+
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
