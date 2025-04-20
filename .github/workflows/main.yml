@@ -86,9 +86,11 @@ jobs:
           cp -r frontend/.next deploy/public/
           cp -r frontend/public/* deploy/public/
           
-          # Copy package.json and server.js
+          # Copy configuration files
           cp package.json deploy/
           cp server.js deploy/
+          cp Procfile deploy/
+          cp -r .ebextensions deploy/
           
           # Create zip file
           cd deploy
