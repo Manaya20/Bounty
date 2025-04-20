@@ -1,16 +1,12 @@
 {
-    "name": "bounty-app",
+    "name": "bounty",
     "version": "1.0.0",
-    "description": "Bounty Application",
-    "main": "server.js",
+    "description": "Bounty application",
     "scripts": {
-        "start": "node server.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "start": "cd backend && npm start",
+        "install": "cd backend && npm install && cd ../frontend && npm install"
     },
     "engines": {
-        "node": "18.x"
-    },
-    "dependencies": {
-        "express": "^4.18.2"
+        "node": ">=18.0.0"
     }
 }

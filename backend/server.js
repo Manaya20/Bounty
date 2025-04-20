@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const app = require("./app");
 const { PORT, NODE_ENV } = require("./src/config/environment");
-const supabaseClient = require("./src/config/SupabaseClient"); // Singleton instance
+const SupabaseClient = require("./src/config/SupabaseClient"); // Note the correct case
 const cors = require("cors");
 //trial changefor deployment
 app.use(
@@ -16,7 +16,11 @@ app.use(
 
 async function startServer() {
   try {
-    const isConnected = await supabaseClient.checkConnection();
+    console.log("Starting server...");
+    console.log("Environment:", process.env.NODE_ENV);
+    console.log("Port:", PORT);
+    
+    const isConnected = await SupabaseClient.checkConnection();
 
     if (!isConnected) {
       console.error("🚨 Failed to connect to Supabase");
@@ -28,6 +32,7 @@ async function startServer() {
     });
   } catch (error) {
     console.error("💥 Server startup error:", error.message);
+    console.error("Stack trace:", error.stack);
     process.exit(1);
   }
 }
