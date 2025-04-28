@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: bounty-app
+  labels:
+    app: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer # Gets an External IP for direct access
+  # Or use ClusterIP if using Ingress
+  # type: ClusterIP

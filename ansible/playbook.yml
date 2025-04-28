@@ -1,0 +1,142 @@
+# ansible/playbook.yml
+# ---
+# Ansible playbook to deploy the Bounty application resources to Kubernetes.
+# Assumes kubectl context is configured for the target GKE cluster.
+# Assumes Kubernetes Python client is installed (`pip install kubernetes`).
+
+- hosts: localhost # Target the local machine where kubectl is configured
+  gather_facts: false # Not needed for managing K8s resources
+
+  vars:
+    # Define the namespace centrally
+    k8s_namespace: bounty-app
+    # Define the path to your manifests relative to the playbook file
+    manifest_dir: ../k8s
+
+  tasks:
+    - name: Ensure Kubernetes Python client is installed
+      ansible.builtin.pip:
+        name: kubernetes
+        state: present
+      become: false # Usually run pip as the user running ansible
+
+    - name: Ensure namespace '{{ k8s_namespace }}' exists
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/namespace.yaml"
+      register: namespace_result
+      # Retry logic in case of transient API issues
+      retries: 3
+      delay: 5
+      until: namespace_result is not failed
+
+    - name: Apply Kubernetes Service Account
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/service-account.yaml"
+        namespace: "{{ k8s_namespace }}" # Ensure it's applied within the namespace
+      register: ksa_result
+      retries: 3
+      delay: 5
+      until: ksa_result is not failed
+
+    - name: Apply SecretProviderClass
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/secret-provider-class.yaml"
+        namespace: "{{ k8s_namespace }}"
+      register: spc_result
+      retries: 3
+      delay: 5
+      until: spc_result is not failed
+
+    # Note: The actual K8s Secret (e.g., bounty-secrets-env) is created by the CSI driver based on the SecretProviderClass,
+    # so we don't apply a secret manifest directly here unless it's for other purposes.
+
+    - name: Apply Backend Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/backend-deployment.yaml"
+        namespace: "{{ k8s_namespace }}"
+      register: backend_deploy_result
+      retries: 3
+      delay: 5
+      until: backend_deploy_result is not failed
+
+    - name: Apply Backend Service
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/backend-service.yaml"
+        namespace: "{{ k8s_namespace }}"
+      register: backend_svc_result
+      retries: 3
+      delay: 5
+      until: backend_svc_result is not failed
+
+    - name: Apply Frontend Deployment
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/frontend-deployment.yaml"
+        namespace: "{{ k8s_namespace }}"
+      register: frontend_deploy_result
+      retries: 3
+      delay: 5
+      until: frontend_deploy_result is not failed
+
+    - name: Apply Frontend Service
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ manifest_dir }}/frontend-service.yaml"
+        namespace: "{{ k8s_namespace }}"
+      register: frontend_svc_result
+      retries: 3
+      delay: 5
+      until: frontend_svc_result is not failed
+
+    # Optional: Apply Ingress if using it
+    # - name: Apply Ingress
+    #   kubernetes.core.k8s:
+    #     state: present
+    #     src: "{{ manifest_dir }}/ingress.yaml"
+    #     namespace: "{{ k8s_namespace }}"
+    #   register: ingress_result
+    #   retries: 3
+    #   delay: 5
+    #   until: ingress_result is not failed
+
+    # Optional: Wait for deployments to become ready
+    - name: Wait for Backend Deployment rollout to finish
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: backend-deployment
+        namespace: "{{ k8s_namespace }}"
+      register: backend_status
+      until: "backend_status.resources[0].status.availableReplicas is defined and backend_status.resources[0].status.availableReplicas == backend_status.resources[0].spec.replicas"
+      retries: 30 # Adjust retries (e.g., 30 * 10s = 5 minutes)
+      delay: 10  # Wait 10 seconds between checks
+
+    - name: Wait for Frontend Deployment rollout to finish
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: frontend-deployment
+        namespace: "{{ k8s_namespace }}"
+      register: frontend_status
+      until: "frontend_status.resources[0].status.availableReplicas is defined and frontend_status.resources[0].status.availableReplicas == frontend_status.resources[0].spec.replicas"
+      retries: 30
+      delay: 10
+
+    - name: Deployment Complete - Display Frontend Service Info (LoadBalancer Example)
+      kubernetes.core.k8s_info:
+        kind: Service
+        name: frontend-service
+        namespace: "{{ k8s_namespace }}"
+      register: frontend_service_info
+      when: frontend_svc_result is not failed and frontend_svc_result.result.spec.type == 'LoadBalancer'
+
+    - name: Show Frontend LoadBalancer IP
+      ansible.builtin.debug:
+        msg: "Frontend LoadBalancer IP: {{ frontend_service_info.resources[0].status.loadBalancer.ingress[0].ip | default('Pending...') }}"
+      when: frontend_service_info.resources is defined and frontend_service_info.resources | length > 0 and frontend_service_info.resources[0].status.loadBalancer.ingress is defined
+

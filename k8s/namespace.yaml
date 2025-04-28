@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bounty-app # Match env.APP_NAMESPACE in workflow

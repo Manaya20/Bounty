@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: bounty-app
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      # === Important: Link K8s Service Account to GCP SA via WIF for CSI Driver ===
+      serviceAccountName: bounty-ksa # Create this K8s SA and annotate it
+      containers:
+      - name: backend
+        image: us-central1-docker.pkg.dev/bounty-458107/bounty-repo/backend:latest 
+        ports:
+        - containerPort: 5001
+        env:
+          - name: NODE_ENV
+            value: "production"
+          - name: PORT
+            value: "5001"
+          # Secrets injected via volume mount below
+          - name: PRODUCTION_URL
+            value: "http://REPLACE_WITH_FRONTEND_EXTERNAL_IP_OR_DOMAIN" # <<<--- MANUAL UPDATE NEEDED POST-DEPLOY
+          - name: SUPABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: bounty-secrets-env # Name of the K8s secret defined in SecretProviderClass.secretObjects
+                key: supabase-url      # Key within that K8s secret
+          - name: SUPABASE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: bounty-secrets-env
+                key: supabase-key
+          - name: JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: bounty-secrets-env
+                key: jwt-secret
+        readinessProbe:
+          httpGet: { path: /health, port: 5001 }
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet: { path: /health, port: 5001 }
+          initialDelaySeconds: 45
+          periodSeconds: 30
+          timeoutSeconds: 5
+        # === Secret Management via CSI Driver (Recommended) ===
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store" # Mount path for secrets
+          readOnly: true
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "bounty-secret-provider" # Name defined in SecretProviderClass manifest
