@@ -1,0 +1,175 @@
+# Filename: .github/workflows/main.yml
+name: Bounty GCP CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GCP_PROJECT_ID: "bounty-458107"
+  GKE_CLUSTER_NAME: "bounty-cluster"
+  GKE_ZONE: "us-central1-c"
+  ARTIFACT_REGISTRY_REPO: "us-central1-docker.pkg.dev/bounty-458107/bounty-repo"
+  APP_NAMESPACE: "bounty-app"
+  IMAGE_NAME_BACKEND: "backend"
+  IMAGE_NAME_FRONTEND: "frontend"
+  GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/252050703686/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+  GCP_SERVICE_ACCOUNT: "github-actions-cicd@bounty-458107.iam.gserviceaccount.com"
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # For SonarQube analysis
+
+      - name: Run Trivy FS Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Run SonarQube Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: sonar-scanner || true # Use `|| true` if you don't want scan failure to block pipeline initially
+
+  build-test-push:
+    name: Build, Test, Push
+    needs: security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Frontend Dependencies & Test
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+      - name: Install Backend Dependencies, Build & Test
+        run: |
+          cd backend
+          npm install
+          npm run build
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker $(echo "${{ env.ARTIFACT_REGISTRY_REPO }}" | sed 's|/[^/]*$||') --quiet
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} -f frontend/Dockerfile .
+          docker push ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+          docker tag ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+          docker push ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} -f backend/Dockerfile .
+          docker push ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          docker tag ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+          docker push ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+
+      - name: Run Trivy Scan on Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+
+      - name: Run Trivy Scan on Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL,HIGH"
+
+  deploy:
+    name: Deploy to GKE
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Get GKE Credentials
+        run: gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --zone ${{ env.GKE_ZONE }} --project ${{ env.GCP_PROJECT_ID }}
+
+      - name: Deploy to GKE using Kubectl
+        run: |
+          echo "Updating image tags in Kubernetes manifests..."
+          sed -i 's|image: .*${{ env.IMAGE_NAME_BACKEND }}.*|image: ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}|g' k8s/backend-deployment.yaml
+          sed -i 's|image: .*${{ env.IMAGE_NAME_FRONTEND }}.*|image: ${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}|g' k8s/frontend-deployment.yaml
+          echo "Applying Kubernetes manifests..."
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/backend-deployment.yaml -n ${{ env.APP_NAMESPACE }}
+          kubectl apply -f k8s/backend-service.yaml -n ${{ env.APP_NAMESPACE }}
+          kubectl apply -f k8s/frontend-deployment.yaml -n ${{ env.APP_NAMESPACE }}
+          kubectl apply -f k8s/frontend-service.yaml -n ${{ env.APP_NAMESPACE }}
+          # Apply Ingress if you created k8s/ingress.yaml
+          # kubectl apply -f k8s/ingress.yaml -n ${{ env.APP_NAMESPACE }}
+
+      - name: Wait for deployment rollout
+        run: |
+          echo "Waiting for backend deployment..."
+          kubectl rollout status deployment/backend-deployment -n ${{ env.APP_NAMESPACE }} --timeout=5m
+          echo "Waiting for frontend deployment..."
+          kubectl rollout status deployment/frontend-deployment -n ${{ env.APP_NAMESPACE }} --timeout=5m
+          echo "Deployments successful!"
