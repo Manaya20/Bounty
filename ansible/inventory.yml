@@ -1,16 +1,7 @@
-# ansible/inventory.yml
-# ---
-# Inventory file for managing Kubernetes resources via kubectl context.
-# We target localhost because the k8s modules interact with the API
-# using the current kubectl configuration, not by SSHing into nodes.
-
 all:
   hosts:
     localhost:
-      # Use the local connection plugin
       ansible_connection: local
-      # Ensure Ansible uses the same Python interpreter that has the
-      # necessary Kubernetes libraries (kubernetes python client) installed.
-      # Usually the one Ansible itself is using is fine.
       ansible_python_interpreter: "{{ ansible_playbook_python }}"
-
+      ansible_env:
+        KUBECONFIG: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config', true) }}"

@@ -1,0 +1,9 @@
+- name: Test Kubernetes Connection
+  hosts: localhost
+  tasks:
+    - name: Get Kubernetes Nodes
+      kubernetes.core.k8s_info:
+        kind: Node
+      register: nodes
+    - debug:
+        var: nodes
