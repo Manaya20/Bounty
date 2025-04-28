@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bounty-ingress
+  namespace: bounty-app
+  annotations:
+    # Use GKE Ingress controller for Google Cloud Load Balancer
+    kubernetes.io/ingress.class: "gce"
+    # Optional: Link to a static IP address you provisioned
+    # kubernetes.io/ingress.global-static-ip-name: "your-static-ip-resource-name"
+    # Optional: Use Google-managed SSL certificates
+    # networking.gke.io/managed-certificates: "your-managed-cert-resource-name"
+    # Optional: Redirect HTTP to HTTPS
+    # kubernetes.io/ingress.allow-http: "false"
+spec:
+  # Optional: Configure TLS termination
+  # tls:
+  # - secretName: your-tls-secret # If using your own certs
+  rules:
+  # You can use host-based routing if you have a domain
+  # - host: your-domain.com
+  - http:
+      paths:
+        # Route API requests to the backend service
+        - path: /api/v1 # Matches the prefix used in backend/app.js
+          pathType: Prefix # Use Prefix for routing based on path start
+          backend:
+            service:
+              name: backend-service
+              port:
+                number: 80 # Backend service port
+        # Route all other requests to the frontend service
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: frontend-service
+              port:
+                number: 80 # Frontend service port
