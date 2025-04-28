@@ -1,19 +1,14 @@
-# Stage 1: Build the Node.js application
-FROM node:18-alpine AS builder
+# backend/Dockerfile
+FROM node:18
+
 WORKDIR /app
-COPY backend/package*.json ./
+
+COPY package*.json ./
+
 RUN npm install
-COPY backend/ ./
-RUN npm run build
 
-# Stage 2: Run the application
-FROM node:18-alpine
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY . .
 
-# Secrets will be injected via Kubernetes
-EXPOSE 5001
-CMD ["node", "dist/server.js"]
+EXPOSE 5000
+
+CMD ["npm", "start"]

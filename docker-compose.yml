@@ -1,32 +1,17 @@
 version: '3'
-
 services:
-  sonarqube:
-    image: sonarqube:latest
+  frontend:
+    build: ./frontend
     ports:
-      - "9000:9000"
+      - "3000:3000"
     environment:
-      - SONAR_JDBC_URL=jdbc:postgresql://db:5432/sonar
-      - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    depends_on:
-      - db
+      - NEXT_PUBLIC_SUPABASE_URL=https://svjpdlkwyboljjtvqivc.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2anBkbGt3eWJvbGpqdHZxaXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMDg1NTksImV4cCI6MjA1Nzg4NDU1OX0.P9tShtVo9hnuKVE2IycZ5QkVWiZuPsBR5El1YXnq-D4
 
-  db:
-    image: postgres:latest
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
     environment:
-      - POSTGRES_USER=sonar
-      - POSTGRES_PASSWORD=sonar
-      - POSTGRES_DB=sonar
-    volumes:
-      - postgresql_data:/var/lib/postgresql/data
-
-volumes:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
-  postgresql_data: 
+      - SUPABASE_URL=https://svjpdlkwyboljjtvqivc.supabase.co
+      - SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2anBkbGt3eWJvbGpqdHZxaXZjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MjMwODU1OSwiZXhwIjoyMDU3ODg0NTU5fQ.AxyWIRGCP8kh05NrkszntDxbSyB6uRfMsH80YM1b8kg
