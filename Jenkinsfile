@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/Manaya20/Bounty.git'
+                git branch: 'deploy-jenkinks', url: 'https://github.com/Manaya20/Bounty.git'
             }
         }
 
